@@ -5,6 +5,10 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppSettings.self) private var settings
 
+    /// Everything in the library, purely so pending reminders can be reconciled
+    /// against it at launch.
+    @Query private var allItems: [MediaItem]
+
     @State private var selection: Tab = .library
 
     enum Tab: Hashable {
@@ -29,6 +33,11 @@ struct ContentView: View {
         }
         .tint(.accentColor)
         .task {
+            // Bring pending reminders back in line with the library: prune any
+            // for titles that have been watched, deleted, or have since come out.
+            // Never prompts for permission — see `reconcile`.
+            await NotificationManager.shared.reconcile(with: allItems)
+
             // First-launch nudge: with no token, every network feature is dead,
             // so open onto Settings rather than an empty Library the user has
             // no way to fill.
