@@ -121,14 +121,11 @@ struct TMDBDecodingTests {
 
     // MARK: - Dates
 
-    @Test("release dates parse to local midnight, so the day never slips")
+    @Test("release dates parse to the published day")
     func dateParsing() throws {
-        let date = try #require(TMDBDate.parse("2024-02-27"))
+        let date = try #require(ReleaseDate.parse("2024-02-27"))
 
-        // The whole point: reading the date back with the current calendar has to
-        // give the same calendar day TMDB published. A UTC-midnight parse would
-        // hand back the 26th for anyone west of Greenwich.
-        let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        let components = ReleaseDate.calendar.dateComponents([.year, .month, .day], from: date)
         #expect(components.year == 2024)
         #expect(components.month == 2)
         #expect(components.day == 27)
@@ -136,7 +133,7 @@ struct TMDBDecodingTests {
 
     @Test("missing dates are nil", arguments: [nil, "", "not-a-date", "2024"])
     func missingDates(_ raw: String?) {
-        #expect(TMDBDate.parse(raw) == nil)
+        #expect(ReleaseDate.parse(raw) == nil)
     }
 
     // MARK: - Image URLs
@@ -158,8 +155,8 @@ struct TMDBDecodingTests {
 
     // MARK: - Helpers
 
-    /// Local midnight on the given day — what `TMDBDate.parse` should produce.
+    /// Midnight UTC on the given day — what `ReleaseDate.parse` should produce.
     private func expectedDate(_ year: Int, _ month: Int, _ day: Int) -> Date? {
-        Calendar.current.date(from: DateComponents(year: year, month: month, day: day))
+        ReleaseDate.calendar.date(from: DateComponents(year: year, month: month, day: day))
     }
 }

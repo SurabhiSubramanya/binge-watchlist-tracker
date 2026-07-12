@@ -125,7 +125,7 @@ extension TMDBSearchRow {
             overview: overview ?? "",
             posterPath: posterPath.nonEmpty,
             backdropPath: backdropPath.nonEmpty,
-            releaseDate: TMDBDate.parse(type == .movie ? releaseDate : firstAirDate)
+            releaseDate: ReleaseDate.parse(type == .movie ? releaseDate : firstAirDate)
         )
     }
 }
@@ -144,7 +144,7 @@ extension TMDBDetailsResponse {
             overview: overview ?? "",
             posterPath: posterPath.nonEmpty,
             backdropPath: backdropPath.nonEmpty,
-            releaseDate: TMDBDate.parse(mediaType == .movie ? releaseDate : firstAirDate),
+            releaseDate: ReleaseDate.parse(mediaType == .movie ? releaseDate : firstAirDate),
             genres: (genres ?? []).map(\.name)
         )
     }
@@ -210,40 +210,6 @@ extension MediaType {
         case .movie: return "movie"
         case .tv: return "tv"
         }
-    }
-}
-
-// MARK: - Dates
-
-/// TMDB sends plain calendar dates (`"2024-02-27"`) — no time, no zone — and
-/// uses `""` as often as `null` for "unknown".
-enum TMDBDate {
-    /// Parsed as **local midnight**, via `Calendar.current`.
-    ///
-    /// The obvious alternative, UTC midnight, is a trap: anywhere west of
-    /// Greenwich it reads back as the *previous day* once `Calendar.current`
-    /// formats it — the classic release-date off-by-one. Local midnight keeps
-    /// the calendar date the user sees identical to the one TMDB published, and
-    /// agrees with `MediaItem.releaseYear` / `isUpcoming`, which already reason
-    /// in `Calendar.current`.
-    ///
-    /// Built from `DateComponents` rather than a `DateFormatter` so it always
-    /// picks up the *current* time zone and needs no shared mutable state.
-    static func parse(_ string: String?) -> Date? {
-        guard let string, !string.isEmpty else { return nil }
-
-        let parts = string.split(separator: "-")
-        guard parts.count == 3,
-              let year = Int(parts[0]),
-              let month = Int(parts[1]),
-              let day = Int(parts[2])
-        else { return nil }
-
-        var components = DateComponents()
-        components.year = year
-        components.month = month
-        components.day = day
-        return Calendar.current.date(from: components)
     }
 }
 

@@ -129,17 +129,27 @@ final class MediaItem {
 // MARK: - Convenience
 
 extension MediaItem {
-    /// True when the title has a known release date still in the future —
-    /// drives the "Upcoming" tag and whether a release reminder is offered.
+    /// True when the title comes out on a day after today — drives the "Upcoming"
+    /// tag and whether a release reminder is offered.
+    ///
+    /// Goes through ``ReleaseDate`` rather than comparing to `.now`: release dates
+    /// are floating calendar dates, so this has to be a day-to-day comparison.
     var isUpcoming: Bool {
         guard let releaseDate else { return false }
-        return releaseDate > .now
+        return ReleaseDate.isUpcoming(releaseDate)
     }
 
     /// Four-digit release year for compact metadata lines, if known.
     var releaseYear: String? {
         guard let releaseDate else { return nil }
-        return String(Calendar.current.component(.year, from: releaseDate))
+        return String(ReleaseDate.year(of: releaseDate))
+    }
+
+    /// The release date written out for display, in the user's locale's format —
+    /// always the day TMDB published, whatever time zone the phone is in.
+    var releaseDateText: String? {
+        guard let releaseDate else { return nil }
+        return ReleaseDate.formatted(releaseDate)
     }
 
     /// Providers grouped for display: what's included with a subscription vs.

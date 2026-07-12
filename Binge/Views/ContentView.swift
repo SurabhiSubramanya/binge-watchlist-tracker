@@ -4,6 +4,7 @@ import SwiftUI
 /// Root of the app — the three top-level destinations.
 struct ContentView: View {
     @Environment(AppSettings.self) private var settings
+    @Environment(\.modelContext) private var modelContext
 
     @State private var selection: Tab = .library
 
@@ -13,15 +14,11 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selection) {
-            // Library and Search are placeholders until Subtasks 6 and 7.
-            PlaceholderTab(
-                title: "Library",
-                systemImage: "square.stack.3d.up.fill",
-                message: "Titles you want to watch — and the ones you already have — will live here."
-            )
-            .tabItem { Label("Library", systemImage: "square.stack") }
-            .tag(Tab.library)
+            LibraryView()
+                .tabItem { Label("Library", systemImage: "square.stack") }
+                .tag(Tab.library)
 
+            // Search is still a placeholder until Subtask 7.
             PlaceholderTab(
                 title: "Search",
                 systemImage: "magnifyingglass",
@@ -38,6 +35,16 @@ struct ContentView: View {
         }
         .tint(.accentColor)
         .task {
+            #if DEBUG
+            // Subtask-6 verification run: populate the Library so the grid can be
+            // seen, and stay on it rather than bouncing to the token nudge.
+            if SampleLibrary.isRequested {
+                SampleLibrary.seed(into: modelContext)
+                selection = .library
+                return
+            }
+            #endif
+
             // First-launch nudge: with no token, every network feature is dead,
             // so open onto Settings rather than an empty Library the user has
             // no way to fill.
