@@ -1,5 +1,18 @@
 # Binge — personal movie & TV watch tracker (iPhone)
 
+## Progress
+Executed one subtask at a time; each is built, run on the iOS Simulator, reviewed,
+approved, and merged to `main` on its own branch.
+
+- ✅ **Subtask 1 — Project scaffold** · completed 2026-07-11 · commit `2750eff` (branch `feature/01-project-scaffold`, merged to `main`). Buildable SwiftUI app, asset catalog, gold accent, dark launch background, shared scheme. Verified running on iPhone 17 sim.
+- ✅ **Subtask 2 — SwiftData model** · completed 2026-07-11 · commit `739d759` (branch `feature/02-data-model`, merged to `main`). `MediaItem` + enums + Codable `StreamingProvider` + composite unique key. Verified via DEBUG `ModelSelfCheck` round-trip on the sim (enums + provider array persist).
+- ⏳ **Subtask 3 — Settings store + Keychain token** — next; branch `feature/03-settings`.
+- ⬜ Subtasks 4–10 — not started.
+
+> Carry-over into later subtasks: `ContentView` is still a placeholder (with a DEBUG
+> self-check line) and `Binge/Support/ModelSelfCheck.swift` is temporary — both are
+> removed in **Subtask 5** when the real `ModelContainer` and tab navigation land.
+
 ## Context
 Binge is a personal iOS app for one user to track movies and TV shows they *want
 to watch* and have *already watched*. Each title is tracked as a single unit —
@@ -64,7 +77,7 @@ out again in Risks and drives the final documentation subtask.
 
 ## Subtasks
 
-### 1. Finish the Xcode project scaffold + asset catalog
+### 1. Finish the Xcode project scaffold + asset catalog  ✅ DONE
 Verify/complete `Binge.xcodeproj` (uses a file-system-synchronized group so
 source files are auto-included). Create the `Binge/` source folder and
 `Assets.xcassets` with `AppIcon`, `AccentColor`, and `Contents.json`. Confirm
@@ -73,7 +86,7 @@ build settings: deployment target 17.0, generated Info.plist, bundle id
 - **Model:** Sonnet 5 — the `.pbxproj` format is fiddly and unverifiable without Xcode, so it needs care even though it's small.
 - **Depends on:** none
 
-### 2. Define the SwiftData model
+### 2. Define the SwiftData model  ✅ DONE
 `Binge/Models/MediaItem.swift`: `@Model final class MediaItem` with `tmdbId`,
 `mediaType` (movie/tv enum), `title`, `overview`, `posterPath`, `releaseDate`
 (optional Date), `watchStatus` (wantToWatch/watched enum), `dateAdded`,
