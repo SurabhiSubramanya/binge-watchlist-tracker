@@ -41,6 +41,9 @@ struct LibraryView: View {
             }
             .navigationTitle("Library")
             .toolbar { toolbarMenu }
+            .navigationDestination(for: MediaItem.self) { item in
+                MediaDetailView(item: item)
+            }
         }
     }
 
@@ -50,19 +53,21 @@ struct LibraryView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 18) {
                 ForEach(visibleItems) { item in
-                    MediaPosterView(
-                        title: item.title,
-                        posterPath: item.posterPath,
-                        mediaType: item.mediaType,
-                        year: item.releaseYear,
-                        badge: item.isUpcoming ? "Upcoming" : nil
-                    )
+                    NavigationLink(value: item) {
+                        MediaPosterView(
+                            title: item.title,
+                            posterPath: item.posterPath,
+                            mediaType: item.mediaType,
+                            year: item.releaseYear,
+                            badge: item.isUpcoming ? "Upcoming" : nil
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal)
             .padding(.bottom, 24)
         }
-        // Subtask 8 makes these cells tap through to the detail screen.
     }
 
     // MARK: - Empty states

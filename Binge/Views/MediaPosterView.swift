@@ -14,6 +14,9 @@ struct MediaPosterView: View {
     /// Gold reads as "coming soon", green as "you already have this" — Search
     /// shows both kinds, and they shouldn't look alike.
     var badgeTint: Color = .accentColor
+    /// The detail screen already prints the title in full beside the artwork —
+    /// repeating it under the poster would just be saying it twice.
+    var showsCaption = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
@@ -40,15 +43,17 @@ struct MediaPosterView: View {
                         .strokeBorder(.white.opacity(0.08), lineWidth: 0.5)
                 }
 
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
+            if showsCaption {
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
 
-            Text(year ?? "—")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                Text(year ?? "—")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
         // The whole cell reads as one thing to VoiceOver, not four.
         .accessibilityElement(children: .combine)
