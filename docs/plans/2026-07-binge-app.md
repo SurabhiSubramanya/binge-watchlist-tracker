@@ -10,8 +10,13 @@ approved, and merged to `main` on its own branch.
 - ✅ **Subtask 5 — App entry + tab navigation + Settings screen** · completed 2026-07-12 · commit `32d99f0` (branch `feature/05-navigation`, merged to `main`). **Done out of order, before Subtask 4** (see below). `BingeApp` sets up the `ModelContainer` + injects `AppSettings`; `Views/ContentView` is the Library·Search·Settings `TabView` (first launch with no token opens onto Settings and badges the tab); `Views/SettingsView` is the real token + region screen; `Support/Theme` holds the shared ground colour. Library/Search are placeholders until 6/7. Verified on the sim **and end-to-end on a physical iPhone 13 Pro**.
 - ✅ **Subtask 4 — TMDB networking** · completed 2026-07-12 · commit `c3aa5d4` (branch `feature/04-tmdb-service`, merged to `main`). `TMDBService` (`searchMulti` / `details` / `watchProviders`) + `TMDBModels`, Bearer auth read from `AppSettings` per call, typed `TMDBError` with `isTokenProblem`. **Added the project's first unit-test target** (`BingeTests`, Swift Testing) — 11 tests, green. Verified twice: `xcodebuild test` against saved sample JSON, *and* a live round-trip against real TMDB on the physical iPhone.
 - ✅ **Subtask 6 — Library views** · completed 2026-07-12 · commit `a5dbc85` (branch `feature/06-library`, merged to `main`). `LibraryView` (Want/Watched segments, `LazyVGrid`, sort + Movies·TV filter, all in-memory over one `@Query`) and reusable `MediaPosterView` with a real no-artwork fallback. **Also fixed release-date correctness** (see below). Undated titles sink deliberately in the release-date sort rather than masquerading as 1970. 25 tests green; verified on the simulator *and* on the physical iPhone with seeded sample data.
-- ⏳ **Subtask 7 — Search & add** — next; branch `feature/07-search`. Deletes `SampleLibrary`'s launch-arg seeding and `TMDBCheckSection`.
-- ⬜ Subtasks 8–10 — not started.
+- ✅ **Subtask 7 — Search & add** · completed 2026-07-12 · commit `d41e83f` (branch `feature/07-search`, merged to `main`). `SearchView` with a 350ms debounce (via `.task(id:)` cancellation), poster-grid results, add-to-Want/Watched, and a green "In Library" badge driven by the same composite key `MediaItem` dedups on. Adds save immediately and enrich genres + providers in a background pass. Deleted the temporary `TMDBCheckSection` and `SampleLibrary`'s launch-arg seeding. Verified end-to-end on the physical iPhone.
+- ⏳ **Subtask 9 — Release reminders** — next; branch `feature/09-reminders`. **Being done before 8**, since Subtask 8 lists 9 as a dependency (the detail screen carries the reminder toggle).
+- ⬜ Subtasks 8, 10 — not started.
+
+> **Carry-over:** Library and Search cells don't tap through to anything yet —
+> `MediaDetailView` is Subtask 8. That's also where *remove* and *mark watched*
+> live, so right now a title can be added but not changed or deleted.
 
 > **Release dates are floating calendar dates, not instants.** TMDB publishes
 > `"2024-02-27"` — no time, no zone. Subtask 4 originally stored them as *local*
@@ -157,7 +162,7 @@ reusable `AsyncImage` poster cell with placeholder + title fallback.
 - **Model:** Sonnet 5 — the core UI surface; SwiftData query + sort/filter wiring and a reusable poster component.
 - **Depends on:** 4, 5
 
-### 7. Search & add flow
+### 7. Search & add flow  ✅ DONE
 `Views/SearchView.swift`: search field with debounced queries to
 `searchMulti`, results as a poster grid, and an **add** action that inserts a
 `MediaItem` (default *Want to Watch*, with an option to add straight to
