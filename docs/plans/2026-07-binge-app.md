@@ -9,8 +9,9 @@ approved, and merged to `main` on its own branch.
 - ✅ **Subtask 3 — Settings store + Keychain token** · completed 2026-07-12 · commit `4604483` (branch `feature/03-settings`, merged to `main`). `Keychain` generic-password wrapper + `@Observable` `AppSettings` (token → Keychain, region → `UserDefaults` seeded from `Locale.current.region`, fallback `US`). Values canonicalize on assignment (token trimmed, region uppercased). Exposes `isConfigured` / `bearerToken`. Verified via DEBUG `SettingsSelfCheck` against the **real** sim Keychain: write → read back → overwrite → clear, plus the reload read-through a fresh `AppSettings` does on relaunch.
 - ✅ **Subtask 5 — App entry + tab navigation + Settings screen** · completed 2026-07-12 · commit `32d99f0` (branch `feature/05-navigation`, merged to `main`). **Done out of order, before Subtask 4** (see below). `BingeApp` sets up the `ModelContainer` + injects `AppSettings`; `Views/ContentView` is the Library·Search·Settings `TabView` (first launch with no token opens onto Settings and badges the tab); `Views/SettingsView` is the real token + region screen; `Support/Theme` holds the shared ground colour. Library/Search are placeholders until 6/7. Verified on the sim **and end-to-end on a physical iPhone 13 Pro**.
 - ✅ **Subtask 4 — TMDB networking** · completed 2026-07-12 · commit `c3aa5d4` (branch `feature/04-tmdb-service`, merged to `main`). `TMDBService` (`searchMulti` / `details` / `watchProviders`) + `TMDBModels`, Bearer auth read from `AppSettings` per call, typed `TMDBError` with `isTokenProblem`. **Added the project's first unit-test target** (`BingeTests`, Swift Testing) — 11 tests, green. Verified twice: `xcodebuild test` against saved sample JSON, *and* a live round-trip against real TMDB on the physical iPhone.
-- ⏳ **Subtask 6 — Library views** — next; branch `feature/06-library`.
-- ⬜ Subtasks 7–10 — not started.
+- ✅ **Subtask 6 — Library views** · completed 2026-07-12 · commit `a5dbc85` (branch `feature/06-library`, merged to `main`). `LibraryView` (Want/Watched segments, `LazyVGrid`, sort + Movies·TV filter, all in-memory over one `@Query`) and reusable `MediaPosterView` with a real no-artwork fallback. **Also fixed release-date correctness** (see below). Undated titles sink deliberately in the release-date sort rather than masquerading as 1970. 25 tests green; verified on the simulator *and* on the physical iPhone with seeded sample data.
+- ⏳ **Subtask 7 — Search & add** — next; branch `feature/07-search`. Deletes `SampleLibrary`'s launch-arg seeding and `TMDBCheckSection`.
+- ⬜ Subtasks 8–10 — not started.
 
 > **Release dates are floating calendar dates, not instants.** TMDB publishes
 > `"2024-02-27"` — no time, no zone. Subtask 4 originally stored them as *local*
@@ -147,7 +148,7 @@ which the plan never assigned to a subtask.
 - **Model:** Haiku 4.5 — mechanical wiring of container, environment, and tabs.
 - **Depends on:** 2, 3
 
-### 6. Library views (lists, poster grid, sort & filter)
+### 6. Library views (lists, poster grid, sort & filter)  ✅ DONE
 `Views/LibraryView.swift`: segmented control for **Want to Watch** / **Watched**,
 a poster grid (`LazyVGrid`) driven by `@Query`. Sort menu (release date / date
 added / title) and a Movies·TV·All filter — implemented as query sort/predicate
