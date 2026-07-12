@@ -6,16 +6,35 @@
 	objectVersion = 70;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		AA000000000000000000001A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000000000000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000006;
+			remoteInfo = Binge;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		AA0000000000000000000002 /* Binge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Binge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000010 /* BingeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BingeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AA0000000000000000000001 /* Binge */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Binge; sourceTree = "<group>"; };
+		AA0000000000000000000011 /* BingeTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = BingeTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AA0000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000015 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -29,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000001 /* Binge */,
+				AA0000000000000000000011 /* BingeTests */,
 				AA0000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -37,6 +57,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000002 /* Binge.app */,
+				AA0000000000000000000010 /* BingeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,6 +85,27 @@
 			productReference = AA0000000000000000000002 /* Binge.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AA0000000000000000000012 /* BingeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000013 /* Build configuration list for PBXNativeTarget "BingeTests" */;
+			buildPhases = (
+				AA0000000000000000000014 /* Sources */,
+				AA0000000000000000000015 /* Frameworks */,
+				AA0000000000000000000016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA0000000000000000000019 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AA0000000000000000000011 /* BingeTests */,
+			);
+			name = BingeTests;
+			productName = BingeTests;
+			productReference = AA0000000000000000000010 /* BingeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -76,6 +118,10 @@
 				TargetAttributes = {
 					AA0000000000000000000006 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					AA0000000000000000000012 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = AA0000000000000000000006;
 					};
 				};
 			};
@@ -94,12 +140,20 @@
 			projectRoot = "";
 			targets = (
 				AA0000000000000000000006 /* Binge */,
+				AA0000000000000000000012 /* BingeTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		AA0000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000016 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -116,7 +170,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA0000000000000000000019 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000006 /* Binge */;
+			targetProxy = AA000000000000000000001A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AA000000000000000000000C /* Debug */ = {
@@ -298,6 +367,44 @@
 			};
 			name = Release;
 		};
+		AA0000000000000000000017 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 97892S7UQ8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.binge.BingeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Binge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Binge";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000018 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 97892S7UQ8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.binge.BingeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Binge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Binge";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -315,6 +422,15 @@
 			buildConfigurations = (
 				AA000000000000000000000C /* Debug */,
 				AA000000000000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000013 /* Build configuration list for PBXNativeTarget "BingeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000017 /* Debug */,
+				AA0000000000000000000018 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
