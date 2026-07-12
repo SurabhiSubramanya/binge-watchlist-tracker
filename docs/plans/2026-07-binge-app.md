@@ -7,19 +7,26 @@ approved, and merged to `main` on its own branch.
 - ✅ **Subtask 1 — Project scaffold** · completed 2026-07-11 · commit `2750eff` (branch `feature/01-project-scaffold`, merged to `main`). Buildable SwiftUI app, asset catalog, gold accent, dark launch background, shared scheme. Verified running on iPhone 17 sim.
 - ✅ **Subtask 2 — SwiftData model** · completed 2026-07-11 · commit `739d759` (branch `feature/02-data-model`, merged to `main`). `MediaItem` + enums + Codable `StreamingProvider` + composite unique key. Verified via DEBUG `ModelSelfCheck` round-trip on the sim (enums + provider array persist).
 - ✅ **Subtask 3 — Settings store + Keychain token** · completed 2026-07-12 · commit `4604483` (branch `feature/03-settings`, merged to `main`). `Keychain` generic-password wrapper + `@Observable` `AppSettings` (token → Keychain, region → `UserDefaults` seeded from `Locale.current.region`, fallback `US`). Values canonicalize on assignment (token trimmed, region uppercased). Exposes `isConfigured` / `bearerToken`. Verified via DEBUG `SettingsSelfCheck` against the **real** sim Keychain: write → read back → overwrite → clear, plus the reload read-through a fresh `AppSettings` does on relaunch.
-- ⬜ Subtasks 4–10 — not started. **Both 4 and 5 are now unblocked** (5 depends only on 2 + 3).
+- ✅ **Subtask 5 — App entry + tab navigation + Settings screen** · completed 2026-07-12 · commit `32d99f0` (branch `feature/05-navigation`, merged to `main`). **Done out of order, before Subtask 4** (see below). `BingeApp` sets up the `ModelContainer` + injects `AppSettings`; `Views/ContentView` is the Library·Search·Settings `TabView` (first launch with no token opens onto Settings and badges the tab); `Views/SettingsView` is the real token + region screen; `Support/Theme` holds the shared ground colour. Library/Search are placeholders until 6/7. Verified on the sim **and end-to-end on a physical iPhone 13 Pro**.
+- ⏳ **Subtask 4 — TMDB networking** — next; branch `feature/04-tmdb-service`. Now verifiable against *live* TMDB.
+- ⬜ Subtasks 6–10 — not started.
 
-> **Recommended order change — do 5 before 4.** Subtask 4 is the first piece that
-> needs a *live* TMDB token to verify, but the Settings screen that accepts one only
-> lands in Subtask 5. Doing 5 first gives a real field to paste the token into, so 4
-> can be verified against live TMDB rather than only saved sample JSON. It also lets
-> the first physical-iPhone install confirm the Keychain path on real hardware (the
-> Simulator doesn't model the team-prefixed keychain access group).
+> **Order was changed: 5 was done before 4.** Subtask 4 is the first piece needing a
+> *live* TMDB token to verify, but the Settings screen that accepts one only landed in
+> Subtask 5 (which depends on 2+3 only, so it was already unblocked). Doing 5 first
+> means 4 can be checked against real TMDB responses, not just saved sample JSON.
 
-> Carry-over into later subtasks: `ContentView` is still a placeholder (with two DEBUG
-> self-check lines) and `Binge/Support/ModelSelfCheck.swift` +
-> `Binge/Support/SettingsSelfCheck.swift` are temporary — all removed in **Subtask 5**
-> when the real `ModelContainer`, tab navigation, and Settings screen land.
+> **Plan gap found:** the plan named a Settings *tab* but never assigned a
+> `SettingsView` file to any subtask (6/7/8 are Library/Search/Detail). It was built
+> as part of Subtask 5, since token entry is what unblocks Subtask 4.
+
+> **Risk retired:** the Keychain round-trip is verified on the *physical* iPhone, not
+> just the Simulator (which doesn't model the team-prefixed keychain access group) —
+> token saved, badge cleared, still configured after a cold relaunch. Free-signing
+> device deploys now run headlessly from the CLI (`DEVELOPMENT_TEAM` is committed).
+
+> Carry-over resolved: the placeholder `ContentView`, `ModelSelfCheck.swift`, and
+> `SettingsSelfCheck.swift` were all deleted in Subtask 5 as planned.
 
 ## Context
 Binge is a personal iOS app for one user to track movies and TV shows they *want
@@ -122,10 +129,12 @@ helper (`posterURL(path:size:)`). No third-party deps.
 - **Model:** Sonnet 5 — standard API integration; the only subtlety is decoding the heterogeneous `search/multi` payload and the nested providers structure.
 - **Depends on:** 2, 3
 
-### 5. App entry point + root tab navigation
+### 5. App entry point + root tab navigation  ✅ DONE (built before 4)
 `Binge/BingeApp.swift` sets up the `ModelContainer` and injects `AppSettings`.
 `Binge/Views/ContentView.swift` is a `TabView`: **Library**, **Search**,
 **Settings**. First-launch: if no token, nudge the user to Settings.
+Also shipped `Binge/Views/SettingsView.swift` (token entry + region picker),
+which the plan never assigned to a subtask.
 - **Model:** Haiku 4.5 — mechanical wiring of container, environment, and tabs.
 - **Depends on:** 2, 3
 
