@@ -12,12 +12,17 @@ approved, and merged to `main` on its own branch.
 - ✅ **Subtask 6 — Library views** · completed 2026-07-12 · commit `a5dbc85` (branch `feature/06-library`, merged to `main`). `LibraryView` (Want/Watched segments, `LazyVGrid`, sort + Movies·TV filter, all in-memory over one `@Query`) and reusable `MediaPosterView` with a real no-artwork fallback. **Also fixed release-date correctness** (see below). Undated titles sink deliberately in the release-date sort rather than masquerading as 1970. 25 tests green; verified on the simulator *and* on the physical iPhone with seeded sample data.
 - ✅ **Subtask 7 — Search & add** · completed 2026-07-12 · commit `d41e83f` (branch `feature/07-search`, merged to `main`). `SearchView` with a 350ms debounce (via `.task(id:)` cancellation), poster-grid results, add-to-Want/Watched, and a green "In Library" badge driven by the same composite key `MediaItem` dedups on. Adds save immediately and enrich genres + providers in a background pass. Deleted the temporary `TMDBCheckSection` and `SampleLibrary`'s launch-arg seeding. Verified end-to-end on the physical iPhone.
 - ✅ **Subtask 9 — Release reminders** · completed 2026-07-12 · commit `da435ac` (branch `feature/09-reminders`, merged to `main`). **Done before 8**, which depends on it. Split into a *pure* `ReleaseReminder` (whether/when — every edge unit-tested: UTC release day so it can't fire a day early, time-zone-free `DateComponents` so it follows the user, past triggers refused, composite-key ids as the duplicate guard) and a thin `NotificationManager` shell over `UNUserNotificationCenter`. `reconcile(with:)` runs at launch and prunes drift **without** ever prompting for permission. 37 tests green.
-- ⏳ **Subtask 8 — Detail screen** — next; branch `feature/08-detail`. Makes cells tap through, shows streaming providers, and carries the reminder toggle — which is what finally lets Subtask 9 be verified end-to-end on a device.
-- ⬜ Subtask 10 — not started.
+- ✅ **Subtask 8 — Detail screen** · completed 2026-07-12 · commit `bfd8840` (branch `feature/08-detail`, merged to `main`). `MediaDetailView`: backdrop/poster/date/genres/overview, "Where to watch" provider logos (with an explicit *"Not available to stream in <region>"* state, not a blank), and actions — Want↔Watched, remove, refresh, reminder toggle. Library cells now tap through. Refresh follows a revised release date and re-syncs the reminder. **This also closed out Subtask 9's end-to-end verification** — the toggle scheduled a real notification on device, and the permission prompt fired on the toggle rather than at app launch.
+- ⏳ **Subtask 10 — Setup & run documentation** — the only thing left; branch `feature/10-docs`.
 
-> **Carry-over:** Library and Search cells don't tap through to anything yet —
-> `MediaDetailView` is Subtask 8. That's also where *remove* and *mark watched*
-> live, so right now a title can be added but not changed or deleted.
+> **All nine implementation subtasks are done.** The app is feature-complete and
+> running on the user's iPhone 13 Pro: token in the Keychain, search → add →
+> library → detail → reminders, all against live TMDB.
+
+> **Still unverifiable by anyone:** that a release reminder actually *arrives* at
+> 9am on release day — that's real-world time. The decision behind it (UTC release
+> day, time-zone-free trigger, past-date refusal, duplicate guard) is pinned by 37
+> tests.
 
 > **Release dates are floating calendar dates, not instants.** TMDB publishes
 > `"2024-02-27"` — no time, no zone. Subtask 4 originally stored them as *local*
@@ -172,7 +177,7 @@ Reflect items already in the library.
 - **Model:** Sonnet 5 — debounce, async search, and insert/dedup logic against the store.
 - **Depends on:** 4, 6
 
-### 8. Detail screen
+### 8. Detail screen  ✅ DONE (built after 9)
 `Views/MediaDetailView.swift`: large poster, title, release date (with an
 "upcoming" indicator when in the future), overview, and **where to stream**
 (provider logos for the chosen region). Actions: move between Want/Watched,
@@ -197,6 +202,19 @@ trusting the developer profile on-device, and the **~7-day re-sign** caveat —
 plus granting notification permission. Include a short manual test checklist.
 - **Model:** Haiku 4.5 — straightforward documentation of known steps.
 - **Depends on:** 1–9
+
+Things learned during the build that the README **must** carry:
+- **Deleting the app wipes the TMDB token, not just the library.** Since iOS 10.3,
+  removing an app removes its Keychain items too. Bit us once.
+- **Free-signing device deploys run headlessly** now that `DEVELOPMENT_TEAM` is
+  committed: `xcodebuild -destination 'platform=iOS,id=<UDID>' -allowProvisioningUpdates`
+  then `xcrun devicectl device install app` / `process launch`. No Xcode GUI needed
+  after the one-time team selection.
+- **Developer Mode must be on** on the iPhone, or `devicectl` reports the device as
+  `connected (no DDI)`.
+- **`xcodebuild test`** runs the 37-test `BingeTests` target (Swift Testing).
+- Notification permission is requested **when the user flips a reminder toggle**,
+  never at launch.
 
 ## Risks & edge cases
 - **No build verification here.** Xcode isn't installed, so nothing compiles in
