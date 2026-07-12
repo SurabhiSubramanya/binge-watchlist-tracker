@@ -6,12 +6,20 @@ approved, and merged to `main` on its own branch.
 
 - ✅ **Subtask 1 — Project scaffold** · completed 2026-07-11 · commit `2750eff` (branch `feature/01-project-scaffold`, merged to `main`). Buildable SwiftUI app, asset catalog, gold accent, dark launch background, shared scheme. Verified running on iPhone 17 sim.
 - ✅ **Subtask 2 — SwiftData model** · completed 2026-07-11 · commit `739d759` (branch `feature/02-data-model`, merged to `main`). `MediaItem` + enums + Codable `StreamingProvider` + composite unique key. Verified via DEBUG `ModelSelfCheck` round-trip on the sim (enums + provider array persist).
-- ⏳ **Subtask 3 — Settings store + Keychain token** — next; branch `feature/03-settings`.
-- ⬜ Subtasks 4–10 — not started.
+- ✅ **Subtask 3 — Settings store + Keychain token** · completed 2026-07-12 · commit `4604483` (branch `feature/03-settings`, merged to `main`). `Keychain` generic-password wrapper + `@Observable` `AppSettings` (token → Keychain, region → `UserDefaults` seeded from `Locale.current.region`, fallback `US`). Values canonicalize on assignment (token trimmed, region uppercased). Exposes `isConfigured` / `bearerToken`. Verified via DEBUG `SettingsSelfCheck` against the **real** sim Keychain: write → read back → overwrite → clear, plus the reload read-through a fresh `AppSettings` does on relaunch.
+- ⬜ Subtasks 4–10 — not started. **Both 4 and 5 are now unblocked** (5 depends only on 2 + 3).
 
-> Carry-over into later subtasks: `ContentView` is still a placeholder (with a DEBUG
-> self-check line) and `Binge/Support/ModelSelfCheck.swift` is temporary — both are
-> removed in **Subtask 5** when the real `ModelContainer` and tab navigation land.
+> **Recommended order change — do 5 before 4.** Subtask 4 is the first piece that
+> needs a *live* TMDB token to verify, but the Settings screen that accepts one only
+> lands in Subtask 5. Doing 5 first gives a real field to paste the token into, so 4
+> can be verified against live TMDB rather than only saved sample JSON. It also lets
+> the first physical-iPhone install confirm the Keychain path on real hardware (the
+> Simulator doesn't model the team-prefixed keychain access group).
+
+> Carry-over into later subtasks: `ContentView` is still a placeholder (with two DEBUG
+> self-check lines) and `Binge/Support/ModelSelfCheck.swift` +
+> `Binge/Support/SettingsSelfCheck.swift` are temporary — all removed in **Subtask 5**
+> when the real `ModelContainer`, tab navigation, and Settings screen land.
 
 ## Context
 Binge is a personal iOS app for one user to track movies and TV shows they *want
@@ -96,7 +104,7 @@ key on `(tmdbId, mediaType)` to prevent duplicates.
 - **Model:** Sonnet 5 — core data-modeling decisions (dedup key, Codable-in-SwiftData for providers) that everything else builds on.
 - **Depends on:** 1
 
-### 3. Settings store + Keychain-backed API token
+### 3. Settings store + Keychain-backed API token  ✅ DONE
 `Binge/Support/AppSettings.swift` (an `@Observable`/`ObservableObject`) holding
 the TMDB token and region. Token stored in **Keychain** via a tiny wrapper
 (`Support/Keychain.swift`); region in `UserDefaults`, defaulting to
