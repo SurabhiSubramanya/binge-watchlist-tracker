@@ -11,6 +11,9 @@ struct MediaPosterView: View {
     let mediaType: MediaType
     var year: String?
     var badge: String?
+    /// Gold reads as "coming soon", green as "you already have this" — Search
+    /// shows both kinds, and they shouldn't look alike.
+    var badgeTint: Color = .accentColor
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
@@ -25,7 +28,7 @@ struct MediaPosterView: View {
                             .tracking(0.5)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
-                            .background(Color.accentColor, in: Capsule())
+                            .background(badgeTint, in: Capsule())
                             .foregroundStyle(.black)
                             .padding(6)
                     }

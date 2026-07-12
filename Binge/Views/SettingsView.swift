@@ -17,11 +17,6 @@ struct SettingsView: View {
                 tokenSection
                 regionSection
                 aboutSection
-
-                #if DEBUG
-                // Temporary Subtask-4 live check; removed in Subtask 7.
-                TMDBCheckSection()
-                #endif
             }
             .navigationTitle("Settings")
             .scrollContentBackground(.hidden)

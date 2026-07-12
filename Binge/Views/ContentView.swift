@@ -4,7 +4,6 @@ import SwiftUI
 /// Root of the app — the three top-level destinations.
 struct ContentView: View {
     @Environment(AppSettings.self) private var settings
-    @Environment(\.modelContext) private var modelContext
 
     @State private var selection: Tab = .library
 
@@ -18,14 +17,9 @@ struct ContentView: View {
                 .tabItem { Label("Library", systemImage: "square.stack") }
                 .tag(Tab.library)
 
-            // Search is still a placeholder until Subtask 7.
-            PlaceholderTab(
-                title: "Search",
-                systemImage: "magnifyingglass",
-                message: "Search TMDB for a movie or show, then add it to your library."
-            )
-            .tabItem { Label("Search", systemImage: "magnifyingglass") }
-            .tag(Tab.search)
+            SearchView()
+                .tabItem { Label("Search", systemImage: "magnifyingglass") }
+                .tag(Tab.search)
 
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape") }
@@ -35,16 +29,6 @@ struct ContentView: View {
         }
         .tint(.accentColor)
         .task {
-            #if DEBUG
-            // Subtask-6 verification run: populate the Library so the grid can be
-            // seen, and stay on it rather than bouncing to the token nudge.
-            if SampleLibrary.isRequested {
-                SampleLibrary.seed(into: modelContext)
-                selection = .library
-                return
-            }
-            #endif
-
             // First-launch nudge: with no token, every network feature is dead,
             // so open onto Settings rather than an empty Library the user has
             // no way to fill.
@@ -55,37 +39,16 @@ struct ContentView: View {
     }
 }
 
-/// Stand-in for a tab that hasn't been built yet. Replaced by the real Library
-/// (Subtask 6) and Search (Subtask 7) screens.
-private struct PlaceholderTab: View {
-    let title: String
-    let systemImage: String
-    let message: String
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.bingeGround.ignoresSafeArea()
-
-                ContentUnavailableView {
-                    Label(title, systemImage: systemImage)
-                } description: {
-                    Text(message)
-                }
-            }
-            .navigationTitle(title)
-        }
-    }
-}
-
 #Preview("Configured") {
     ContentView()
         .environment(AppSettings.preview(token: "preview-token"))
+        .modelContainer(SampleLibrary.previewContainer)
         .preferredColorScheme(.dark)
 }
 
 #Preview("Needs token") {
     ContentView()
         .environment(AppSettings.preview())
+        .modelContainer(SampleLibrary.previewContainer)
         .preferredColorScheme(.dark)
 }
