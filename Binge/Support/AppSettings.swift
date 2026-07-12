@@ -102,3 +102,23 @@ final class AppSettings {
         return trimmed.isEmpty ? fallbackRegion : trimmed
     }
 }
+
+#if DEBUG
+extension AppSettings {
+    /// A throwaway store for SwiftUI previews: scratch `UserDefaults` suite and
+    /// scratch Keychain account, so a preview can never read — or clobber — the
+    /// real token. This is what the injectable `init` exists for.
+    static func preview(token: String = "", region: String = "US") -> AppSettings {
+        let suite = "com.binge.Binge.preview"
+        UserDefaults.standard.removePersistentDomain(forName: suite)
+
+        let settings = AppSettings(
+            defaults: UserDefaults(suiteName: suite) ?? .standard,
+            tokenAccount: "preview-tmdb-token"
+        )
+        settings.tmdbToken = token
+        settings.region = region
+        return settings
+    }
+}
+#endif
