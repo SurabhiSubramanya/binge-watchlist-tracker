@@ -8,8 +8,17 @@ approved, and merged to `main` on its own branch.
 - ✅ **Subtask 2 — SwiftData model** · completed 2026-07-11 · commit `739d759` (branch `feature/02-data-model`, merged to `main`). `MediaItem` + enums + Codable `StreamingProvider` + composite unique key. Verified via DEBUG `ModelSelfCheck` round-trip on the sim (enums + provider array persist).
 - ✅ **Subtask 3 — Settings store + Keychain token** · completed 2026-07-12 · commit `4604483` (branch `feature/03-settings`, merged to `main`). `Keychain` generic-password wrapper + `@Observable` `AppSettings` (token → Keychain, region → `UserDefaults` seeded from `Locale.current.region`, fallback `US`). Values canonicalize on assignment (token trimmed, region uppercased). Exposes `isConfigured` / `bearerToken`. Verified via DEBUG `SettingsSelfCheck` against the **real** sim Keychain: write → read back → overwrite → clear, plus the reload read-through a fresh `AppSettings` does on relaunch.
 - ✅ **Subtask 5 — App entry + tab navigation + Settings screen** · completed 2026-07-12 · commit `32d99f0` (branch `feature/05-navigation`, merged to `main`). **Done out of order, before Subtask 4** (see below). `BingeApp` sets up the `ModelContainer` + injects `AppSettings`; `Views/ContentView` is the Library·Search·Settings `TabView` (first launch with no token opens onto Settings and badges the tab); `Views/SettingsView` is the real token + region screen; `Support/Theme` holds the shared ground colour. Library/Search are placeholders until 6/7. Verified on the sim **and end-to-end on a physical iPhone 13 Pro**.
-- ⏳ **Subtask 4 — TMDB networking** — next; branch `feature/04-tmdb-service`. Now verifiable against *live* TMDB.
-- ⬜ Subtasks 6–10 — not started.
+- ✅ **Subtask 4 — TMDB networking** · completed 2026-07-12 · commit `c3aa5d4` (branch `feature/04-tmdb-service`, merged to `main`). `TMDBService` (`searchMulti` / `details` / `watchProviders`) + `TMDBModels`, Bearer auth read from `AppSettings` per call, typed `TMDBError` with `isTokenProblem`. **Added the project's first unit-test target** (`BingeTests`, Swift Testing) — 11 tests, green. Verified twice: `xcodebuild test` against saved sample JSON, *and* a live round-trip against real TMDB on the physical iPhone.
+- ⏳ **Subtask 6 — Library views** — next; branch `feature/06-library`.
+- ⬜ Subtasks 7–10 — not started.
+
+> **Release dates are floating calendar dates, not instants.** TMDB publishes
+> `"2024-02-27"` — no time, no zone. Subtask 4 originally stored them as *local*
+> midnight, which silently shifts the displayed day by one if the phone changes
+> time zone. Corrected in Subtask 6: stored as **UTC midnight** and always read
+> back through a **UTC calendar**, so the day matches what TMDB published in every
+> time zone. Anything touching `releaseDate` must go through `ReleaseDate` — never
+> `Calendar.current` directly. Feeds straight into Subtask 9's reminder logic.
 
 > **Order was changed: 5 was done before 4.** Subtask 4 is the first piece needing a
 > *live* TMDB token to verify, but the Settings screen that accepts one only landed in
@@ -120,7 +129,7 @@ token on first launch.
 - **Model:** Sonnet 5 — small but security-adjacent (secret handling); worth getting the Keychain wrapper right.
 - **Depends on:** 1
 
-### 4. TMDB networking layer
+### 4. TMDB networking layer  ✅ DONE
 `Binge/Services/TMDBService.swift` + `Services/TMDBModels.swift`. Async methods:
 `searchMulti(query)` (decodes mixed movie/TV results, skips `person`),
 `details(for:)`, and `watchProviders(for:region:)`. Bearer-token auth from
