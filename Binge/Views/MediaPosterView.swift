@@ -44,10 +44,14 @@ struct MediaPosterView: View {
                 }
 
             if showsCaption {
+                // Always two lines tall, even for a one-line title. Otherwise a
+                // short title makes a shorter cell, the grid row is as tall as
+                // its tallest cell, and the short one gets centred in it — which
+                // pushes its poster down out of line with its neighbours'.
                 Text(title)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
-                    .lineLimit(2)
+                    .lineLimit(2, reservesSpace: true)
                     .multilineTextAlignment(.leading)
 
                 Text(year ?? "—")
