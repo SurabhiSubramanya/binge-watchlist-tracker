@@ -75,17 +75,19 @@ struct MediaPosterView: View {
     @ViewBuilder
     private var poster: some View {
         if let url = TMDBService.posterURL(path: posterPath) {
-            AsyncImage(url: url) { phase in
+            // Not `AsyncImage`: it doesn't cache, and it treats a single failed
+            // fetch as final. In a grid that builds and tears down cells as you
+            // scroll, that lost posters at random — the cell gave up for good on
+            // artwork that was fine, and the same URL then loaded on the detail
+            // screen. `RemoteImage` caches and retries.
+            RemoteImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
                     image.resizable().scaledToFill()
-                case .failure:
-                    // Loaded and failed — a retry won't help, so show the
-                    // fallback rather than an endless spinner.
-                    fallback
-                case .empty:
+                case .loading:
                     placeholder
-                @unknown default:
+                case .failure:
+                    // Fetched, retried, still nothing. Now the fallback is the truth.
                     fallback
                 }
             }
