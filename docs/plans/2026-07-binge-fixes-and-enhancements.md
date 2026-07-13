@@ -181,8 +181,8 @@ there would still be a hard cut from a static image to a live UI.
 - **The empty space above the wordmark is deliberate** — it's the slot for the app
   icon, which is the next change.
 
-### Change 4 — Watched counts under the Library grid ⏳
-*Added 2026-07-12 · branch `feat/04-watched-counts` · awaiting review*
+### Change 4 — Watched counts under the Library grid ✅
+*Added 2026-07-12 · commit `2c15038` · branch `feat/04-watched-counts` · merged to `main`*
 
 **Ask.** Show how many movies and how many TV shows are in the library, at the bottom
 of the Library page. **Watched only** — not Want to Watch.
