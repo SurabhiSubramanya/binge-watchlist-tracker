@@ -6,9 +6,13 @@ subtasks that built the app. That plan is closed once Subtask 10 (docs) lands;
 functionality added beyond the original scope.
 
 ## Workflow
-One bug or change at a time, each on its own `fix/NN-name` branch off `main`,
-built and run before review, fast-forward merged once approved. Same rhythm as
-the subtasks — no batching, even for small related fixes.
+One bug or change at a time, each on its own branch off `main` — `fix/NN-name` for
+a bug, `feat/NN-name` for an enhancement, sharing **one** number sequence so the
+order is legible at a glance. Built and run before review, fast-forward merged once
+approved. Same rhythm as the subtasks — no batching, even for small related fixes.
+
+Bookkeeping (marking an entry below merged) lands as its own commit on `main`, *not*
+in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 
 ## Fixed
 
@@ -177,8 +181,48 @@ there would still be a hard cut from a static image to a live UI.
 - **The empty space above the wordmark is deliberate** — it's the slot for the app
   icon, which is the next change.
 
+### Change 4 — Watched counts under the Library grid ⏳
+*Added 2026-07-12 · branch `feat/04-watched-counts` · awaiting review*
+
+**Ask.** Show how many movies and how many TV shows are in the library, at the bottom
+of the Library page. **Watched only** — not Want to Watch.
+
+**What shipped.** A `LibraryFooter` pinned beneath the grid: two big amber numbers
+over small-caps `MOVIES` / `TV SHOWS` labels, split by a hairline. Pinned rather than
+scrolled with the grid — a total that scrolls off the bottom is a total you have to go
+hunting for, which rather defeats it. Hidden entirely on Want to Watch, and hidden when
+nothing has been watched yet (a pair of zeroes is not a fact worth a bar of chrome).
+
+**Two decisions the user made, not me:**
+1. **The design.** Three treatments were built and screenshotted *in the running app*
+   (minimal grey text / icon chips / the stats bar) rather than mocked. ASCII previews
+   in the question tool were rejected, rightly — you cannot judge this from a drawing
+   of it. The stats bar won. **Re-do this trick for any visual choice**: build the
+   variants behind a launch argument, screenshot each, delete the losers.
+2. **How it interacts with the type filter.** The Library already filters by All /
+   Movies / TV, so "when the filter is on Movies, does the TV count vanish?" had to be
+   settled. Chosen: **the totals never move.** The tally is a fact about the library,
+   not a description of the grid. The consequence is accepted and deliberate — with the
+   filter on Movies you will see a TV count above a grid containing no TV.
+
+**Notes worth keeping:**
+- `LibraryView.Tally` is a nested struct, not a computed property in the body, purely so
+  it can be tested without driving a view. It takes the **whole** `items` array —
+  passing `visibleItems` is the one change that would quietly break decision (2), so
+  `Tally.init` says so in a comment.
+- **That comment is the guard, not a test.** A unit test can't check which array the
+  *view* passes in without driving the view, so `LibraryTallyTests` pins the next best
+  thing: that a filtered input visibly changes the answer. An earlier version of that
+  test asserted `Tally(items) == Tally(items)`, which is a tautology and could never
+  have failed — it was cut.
+- **Pluralisation is manual.** The number is styled separately from its label (amber,
+  larger), so it can't carry SwiftUI's automatic grammar agreement with it — the label
+  has to agree on its own, or a library with one film reads **"1 MOVIES"**. Verified on
+  the Simulator: it reads "1 MOVIE / 1 TV SHOW".
+- 5 new tests (50 total).
+
 ## Backlog
-- **App icon / logo, and reuse it on the launch screen.** The next change. Binge
+- **App icon / logo, and reuse it on the launch screen.** Deferred by the user. Binge
   currently ships the empty `AppIcon` placeholder, so the Home Screen shows a blank
   white tile. Once there's a logo it drops into the gap above the wordmark in both
   `LaunchScreen.storyboard` and `LaunchCurtain`.

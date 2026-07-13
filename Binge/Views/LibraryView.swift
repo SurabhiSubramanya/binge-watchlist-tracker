@@ -37,6 +37,12 @@ struct LibraryView: View {
                     } else {
                         grid
                     }
+
+                    // Only for Watched — "how much have I got through" is a
+                    // question about what you've finished, not what you've queued.
+                    if status == .watched, !tally.isEmpty {
+                        LibraryFooter(movies: tally.movies, tv: tally.tv)
+                    }
                 }
             }
             .navigationTitle("Library")
@@ -140,6 +146,37 @@ struct LibraryView: View {
         items
             .filter { $0.watchStatus == status && typeFilter.matches($0.mediaType) }
             .sorted(by: sort.areInIncreasingOrder)
+    }
+
+    private var tally: Tally { Tally(items) }
+
+    /// How many films and how many series are in the Watched list.
+    ///
+    /// Counted off the *whole* library rather than `visibleItems`, so the tally is a
+    /// fact about what you've watched and not about what the grid happens to be
+    /// showing. Pulled out of the view so it can be tested without one.
+    struct Tally: Equatable {
+        var movies = 0
+        var tv = 0
+
+        var isEmpty: Bool { movies == 0 && tv == 0 }
+
+        init(movies: Int, tv: Int) {
+            self.movies = movies
+            self.tv = tv
+        }
+
+        /// Feed this the **whole** library, never `visibleItems` — the totals are
+        /// deliberately independent of the type filter, and passing the filtered list
+        /// is the one way to quietly break that.
+        init(_ items: [MediaItem]) {
+            for item in items where item.watchStatus == .watched {
+                switch item.mediaType {
+                case .movie: movies += 1
+                case .tv: tv += 1
+                }
+            }
+        }
     }
 
     enum SortOption: String, CaseIterable, Identifiable {
