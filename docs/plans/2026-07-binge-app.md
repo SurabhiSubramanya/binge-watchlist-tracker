@@ -13,18 +13,18 @@ approved, and merged to `main` on its own branch.
 - ✅ **Subtask 7 — Search & add** · completed 2026-07-12 · commit `d41e83f` (branch `feature/07-search`, merged to `main`). `SearchView` with a 350ms debounce (via `.task(id:)` cancellation), poster-grid results, add-to-Want/Watched, and a green "In Library" badge driven by the same composite key `MediaItem` dedups on. Adds save immediately and enrich genres + providers in a background pass. Deleted the temporary `TMDBCheckSection` and `SampleLibrary`'s launch-arg seeding. Verified end-to-end on the physical iPhone.
 - ✅ **Subtask 9 — Release reminders** · completed 2026-07-12 · commit `da435ac` (branch `feature/09-reminders`, merged to `main`). **Done before 8**, which depends on it. Split into a *pure* `ReleaseReminder` (whether/when — every edge unit-tested: UTC release day so it can't fire a day early, time-zone-free `DateComponents` so it follows the user, past triggers refused, composite-key ids as the duplicate guard) and a thin `NotificationManager` shell over `UNUserNotificationCenter`. `reconcile(with:)` runs at launch and prunes drift **without** ever prompting for permission. 37 tests green.
 - ✅ **Subtask 8 — Detail screen** · completed 2026-07-12 · commit `bfd8840` (branch `feature/08-detail`, merged to `main`). `MediaDetailView`: backdrop/poster/date/genres/overview, "Where to watch" provider logos (with an explicit *"Not available to stream in <region>"* state, not a blank), and actions — Want↔Watched, remove, refresh, reminder toggle. Library cells now tap through. Refresh follows a revised release date and re-syncs the reminder. **This also closed out Subtask 9's end-to-end verification** — the toggle scheduled a real notification on device, and the permission prompt fired on the toggle rather than at app launch.
-- ⏳ **Subtask 10 — Setup & run documentation** — the only thing left; branch `feature/10-docs`.
+- ✅ **Subtask 10 — Setup & run documentation** · completed 2026-07-12 · commit `d8cec31` (branch `feature/10-docs`, merged to `main`). `README.md`: TMDB token (the long **v4 Read Access Token**, not the v3 key — the mistake worth warning about), Simulator run, physical-iPhone run on a free Apple ID (personal team → Developer Mode → trust the profile → ~7-day re-sign), first-launch token/region/notification behaviour, a manual test checklist, and the gotchas the build turned up. Checklist wording was checked against the code, not the plan's prose (the sort menu reads *Recently added*, not "date added"), and the documented `xcodebuild test` command was run: 37 tests green.
 
-> **Post-feature-complete work lives in [`2026-07-binge-fixes-and-enhancements.md`](2026-07-binge-fixes-and-enhancements.md)** — bugs found in real use and functionality beyond the original scope. This plan stays scoped to the ten build subtasks.
+> **✅ PLAN COMPLETE — all ten subtasks done, merged to `main` (head `d8cec31`).**
+> This plan is closed. **Post-feature-complete work lives in
+> [`2026-07-binge-fixes-and-enhancements.md`](2026-07-binge-fixes-and-enhancements.md)**
+> — bugs found in real use and functionality beyond the original scope. This one
+> stays scoped to the ten build subtasks.
 
-> **All nine implementation subtasks are done.** The app is feature-complete and
-> running on the user's iPhone 13 Pro: token in the Keychain, search → add →
-> library → detail → reminders, all against live TMDB.
-
-> **Still unverifiable by anyone:** that a release reminder actually *arrives* at
-> 9am on release day — that's real-world time. The decision behind it (UTC release
-> day, time-zone-free trigger, past-date refusal, duplicate guard) is pinned by 37
-> tests.
+> **The app is feature-complete and running on the user's iPhone 13 Pro:** token in
+> the Keychain, search → add → library → detail → reminders, all against live TMDB.
+> 37 tests green. The one thing nobody can verify yet is a reminder actually
+> *arriving* on release day — see Risks.
 
 > **Release dates are floating calendar dates, not instants.** TMDB publishes
 > `"2024-02-27"` — no time, no zone. Subtask 4 originally stored them as *local*
@@ -106,12 +106,15 @@ scheduled on-device. No server, no push infrastructure, free. Scheduled when a
 *Want-to-Watch* title has a future release date; cancelled when the title is
 marked watched or removed.
 
-### One hard environment constraint
-**Full Xcode is not installed** (only Command Line Tools). Nothing in this
-project can be *built or run* until the user installs Xcode from the Mac App
-Store. All code will be written to be correct on inspection, but the first real
-compile happens on the user's machine after Xcode is installed. This is called
-out again in Risks and drives the final documentation subtask.
+### One hard environment constraint  — ✅ RESOLVED
+*As planned:* **full Xcode is not installed** (only Command Line Tools), so nothing
+could be built or run until the user installed it; all code was written to be
+correct on inspection, with the first real compile happening on their machine.
+
+*What happened:* Xcode 26.6 was installed during Subtask 1 and every subtask since
+has been compiled, tested, and run — on the Simulator and on the physical iPhone.
+`xcodebuild` needs `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
+because `xcode-select` still points at the Command Line Tools.
 
 ## Subtasks
 
@@ -196,7 +199,7 @@ missing dates, timezone handling, and duplicate scheduling (keyed by item id).
 - **Model:** Opus 4.8 — the most correctness-sensitive piece: date/timezone edges, the permission flow, and a schedule/cancel lifecycle that must stay in sync with model changes.
 - **Depends on:** 2, 5
 
-### 10. Setup & run documentation
+### 10. Setup & run documentation  ✅ DONE
 `README.md`: how to (a) install Xcode, (b) create a free TMDB account and copy
 the v4 Read Access Token, (c) open the project, run on the **Simulator**, and
 (d) run on a **real iPhone with a free Apple ID** — selecting your personal team,
@@ -219,41 +222,57 @@ Things learned during the build that the README **must** carry:
   never at launch.
 
 ## Risks & edge cases
-- **No build verification here.** Xcode isn't installed, so nothing compiles in
-  this environment. First real build is on the user's machine; expect to fix a
-  few compile nits then. The hand-written `.pbxproj` is the highest-risk file —
-  if Xcode rejects it, regenerate via `File ▸ New ▸ Project` and drop the source
-  folder in. (Subtask 10 will note this fallback.)
-- **TMDB token required.** Every network feature is dead until the user pastes a
-  valid token. The UI must fail gracefully (clear "add your token" state), not
-  crash or hang.
-- **Region-specific streaming.** Providers differ by country and can be empty for
-  some titles/regions — show a "not available to stream" state, not a blank.
-- **SwiftData + Codable providers.** Storing an array of a Codable struct in a
-  `@Model` works but is a known sharp edge; if it misbehaves, fall back to a
-  JSON-encoded `Data` property with computed accessors.
-- **Notification correctness.** Past/nil release dates, timezone conversion, and
-  keeping scheduled notifications in sync with list changes are the easiest
-  things to get subtly wrong — hence Opus on subtask 9.
-- **Free-signing 7-day expiry.** Not a bug — an Apple limitation of free Apple
-  IDs. Must be documented so the user isn't surprised when the app stops opening.
-- **TMDB rate limits / terms.** Fine at personal scale; just don't hammer search
-  (hence debounce).
+*Every risk below is now settled — how each actually landed is recorded in italics.*
 
-## Testing & verification
-- **Per subtask:** SwiftUI `#Preview`s for each view (2, 6, 7, 8) with sample
-  data so screens render without a live token. Unit-test the TMDB decoders
-  (subtask 4) against saved sample JSON, and the notification date logic
-  (subtask 9) — these are the pieces with real logic.
-- **End-to-end (on the user's machine, post-Xcode):** install Xcode → add token
-  in Settings → search a known title → add to Want to Watch → confirm poster +
-  release date + providers on the detail screen → mark watched (moves lists) →
-  set a reminder on an upcoming title → verify it's scheduled → run once on the
-  Simulator and once on the physical iPhone.
-- **Hard-to-test:** live streaming-provider accuracy (depends on TMDB/region) —
-  verify manually against a couple of known titles.
+- ~~**No build verification here.**~~ ✅ **Retired.** Xcode 26.6 was installed in
+  Subtask 1 and everything has compiled and run since. *The hand-written `.pbxproj`
+  — flagged as the highest-risk file, with a "regenerate the project from scratch"
+  fallback — was accepted by Xcode first time; it only normalized it to
+  `objectVersion = 70` (benign). The fallback was never needed, so the README
+  doesn't carry it.*
+- ~~**TMDB token required.**~~ ✅ **Handled.** *No token → the app opens on Settings
+  with a badged tab; Search and the detail screen say what's missing instead of
+  hanging. The token lives in the Keychain.*
+- ~~**Region-specific streaming.**~~ ✅ **Handled.** *The detail screen shows an
+  explicit "Not available to stream in \<region\>" rather than a blank (Subtask 8).*
+- ~~**SwiftData + Codable providers.**~~ ✅ **Didn't bite.** *The array of Codable
+  `StreamingProvider`s persists fine in the `@Model` — verified by round-trip on the
+  Simulator in Subtask 2. The JSON-`Data`-with-computed-accessors fallback was never
+  needed.*
+- ~~**Notification correctness.**~~ ✅ **Handled, and it was the right call to worry.**
+  *Splitting the pure `ReleaseReminder` (whether/when) from the `UNUserNotificationCenter`
+  shell is what made the edges testable: UTC release day, time-zone-free trigger, past
+  dates refused, composite-key duplicate guard. Pinned by tests.*
+- **Free-signing 7-day expiry.** ⚠️ **Real, permanent, and now documented.** Not a
+  bug — an Apple limitation. *The README warns about it, and notes that reinstalling
+  over the top preserves the library and token.*
+- ~~**TMDB rate limits / terms.**~~ ✅ **Fine at personal scale.** *Search is debounced
+  350ms; the README carries TMDB's required attribution line.*
+
+**The one thing still unverifiable by anyone:** that a release reminder actually
+*arrives* at 9am on release day — that's real-world time passing. The decision behind
+it is pinned by tests; the delivery isn't.
+
+## Testing & verification  ✅ ALL DONE
+- **Per subtask:** ✅ SwiftUI `#Preview`s ship for each view. Unit tests grew to a
+  **37-test `BingeTests` target** (Swift Testing, added by hand in Subtask 4 — the
+  project's first test target): TMDB decoding, library sort/filter, `ReleaseDate`,
+  and `ReleaseReminder`. Green as of the Subtask 10 run.
+- **End-to-end:** ✅ done, on the Simulator *and* on the physical iPhone 13 Pro —
+  token in Settings → search → add to Want to Watch → poster + release date +
+  providers on the detail screen → mark watched (moves lists) → reminder toggle on
+  an upcoming title, which scheduled a real notification on device and fired the
+  permission prompt at the toggle rather than at launch.
+- **Hard-to-test:** ✅ live provider accuracy spot-checked against known titles in
+  the user's region. ⚠️ **Not verifiable at all:** a reminder actually *arriving* at
+  9am on release day — that needs real-world time to pass. Its logic is pinned by
+  tests; its delivery isn't.
+- **Reproducible by anyone else:** the README's manual test checklist walks the same
+  end-to-end path on a fresh machine.
 
 ## Open questions
-None blocking. Defaults chosen where unspecified: streaming region defaults to
-the device locale (changeable in Settings); new items default to *Want to Watch*;
-app icon will be a simple generated placeholder unless you want custom artwork.
+None blocking, and none opened during the build. Defaults chosen where unspecified,
+all of which survived to the finished app: streaming region defaults to the device
+locale (changeable in Settings); new items default to *Want to Watch*; the app icon
+is a simple generated placeholder — say the word if you want real artwork, which
+would be a natural first entry in the fixes & enhancements backlog.
