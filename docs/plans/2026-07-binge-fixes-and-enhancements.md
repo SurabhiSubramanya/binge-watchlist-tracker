@@ -112,7 +112,76 @@ what helps.
   retry/cache guarantees are pinned by the unit tests rather than by a screenshot.
 - Fixes Search's grid too, since `MediaPosterView` is shared.
 
+### Fix 3 — Blank white screen at launch, then the app snaps in ⏳
+*Fixed 2026-07-12 · branch `fix/03-launch-screen` · awaiting review*
+
+**Symptom.** Launching Binge showed a blank **white** screen, which then jumped
+straight to the app with nothing in between. No app name, no branding, and a white
+flash in front of an app that is otherwise entirely dark.
+
+**Cause.** Two separate things, which is why it looked worse than either.
+
+*The white.* The project asked for a launch screen through Xcode's generated
+`Info.plist` keys — `INFOPLIST_KEY_UILaunchScreen_Generation = YES` plus
+`INFOPLIST_KEY_UILaunchScreen_UIColorName = LaunchBackground`. Those two do not
+compose. What Xcode actually generated was a **nested, empty** dictionary:
+
+```xml
+<key>UILaunchScreen</key>
+<dict>
+    <key>UILaunchScreen</key>   <!-- nested -->
+    <dict/>                     <!-- and empty: UIColorName never made it in -->
+</dict>
+```
+
+A `UILaunchScreen` with no `UIColorName` means "launch screen, default styling" —
+and the default is white. The dark `#0B0D13` was configured, compiled into the asset
+catalog, and never once read. `Theme.swift` even carried a comment saying
+`bingeGround` "shares the asset the launch screen uses so the hand-off doesn't flash
+a different shade". That was aspirational: the launch screen had never used it.
+
+*The snap.* A launch screen is a **still image**. It cannot animate, and iOS tears it
+down the instant the first app frame is ready. Even once it was the right colour,
+there would still be a hard cut from a static image to a live UI.
+
+**Fix.**
+- **`LaunchScreen.storyboard`**, wired up with `INFOPLIST_KEY_UILaunchStoryboardName`.
+  A storyboard rather than the plist dictionary because that dictionary can only
+  place a colour and an image — it cannot render *text*, and the app name was the
+  requirement. Dark ground, "Binge" in 46pt bold, a 44×3 amber rule beneath it.
+- **`LaunchCurtain`**, a SwiftUI view that redraws that same wordmark *pixel for
+  pixel* and then animates away: the rule widens 44→132, the wordmark eases up 4%,
+  and the whole thing cross-fades into the app. Because its first frame is identical
+  to the storyboard, the hand-off is invisible — the user sees one continuous screen
+  that lifts, not two screens swapped. Under a second, start to finish.
+
+**Notes worth keeping:**
+- **`UILaunchScreen` had to be deleted, not just left alone.** On iOS 14+ it takes
+  *precedence* over `UILaunchStoryboardName`, so leaving that empty dictionary in
+  place would have kept the white screen no matter how good the storyboard was.
+  Both build configs (Debug *and* Release) were carrying it.
+- **The storyboard and `LaunchCurtain` are a matched pair.** 46pt bold, 44×3 rule,
+  16pt apart, centred — the numbers appear in both files and must stay in sync, or
+  the app visibly jumps at the exact moment it launches. Both files say so.
+- The rule is a plain `Rectangle`, not a `Capsule`, purely so it matches the
+  storyboard: a launch screen can't round a corner without runtime attributes, and
+  iOS doesn't apply those when rendering one.
+- `ContentView` is alive *underneath* the curtain from the first frame, so its `task`
+  (reconciling reminders, choosing the opening tab) runs while the curtain is still
+  up. Lifting it reveals a settled screen rather than one still assembling itself.
+- Reduce Motion gets no flourish and barely a pause — someone who asked the system
+  for less movement is not asking to look at a splash for longer.
+- Verified on the Simulator by capturing frames across a cold launch after a fresh
+  install (an uninstall also clears iOS's cached launch snapshot, which otherwise
+  survives and will happily keep showing you the old one).
+- **The empty space above the wordmark is deliberate** — it's the slot for the app
+  icon, which is the next change.
+
 ## Backlog
+- **App icon / logo, and reuse it on the launch screen.** The next change. Binge
+  currently ships the empty `AppIcon` placeholder, so the Home Screen shows a blank
+  white tile. Once there's a logo it drops into the gap above the wordmark in both
+  `LaunchScreen.storyboard` and `LaunchCurtain`.
 - **The detail page's backdrop and provider logos still use bare `AsyncImage`.**
   Same latent weakness as Fix 2 — no cache, no retry — but a much milder symptom
   (a flat rectangle behind the header, or a blank provider tile), and they weren't

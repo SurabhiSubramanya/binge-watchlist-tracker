@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    The launch screen.
+
+    A storyboard rather than the `UILaunchScreen` Info.plist dictionary, because
+    that dictionary can only place a colour and an image — there is no way to put
+    *text* on it, and the app name is the whole point of this screen.
+
+    Every value here is mirrored, exactly, by `LaunchCurtain` in SwiftUI: same
+    wordmark, same 46pt bold, same 44x3 amber rule, same 16pt gap, same centre. The
+    curtain's first frame is therefore pixel-identical to this, which is what makes
+    the hand-off from launch screen to app invisible. **Change one, change the other**
+    or the app will visibly jump at launch.
+
+    The empty space above the wordmark is deliberate: it's where the app icon goes
+    once there is one.
+-->
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BNG-vc-001">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Launch Screen-->
+        <scene sceneID="BNG-sc-001">
+            <objects>
+                <viewController id="BNG-vc-001" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="BNG-vw-001">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="BNG-st-001">
+                                <rect key="frame" x="132" y="393" width="129" height="66"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Binge" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BNG-lb-001">
+                                        <rect key="frame" x="0.0" y="0.0" width="129" height="47"/>
+                                        <fontDescription key="fontDescription" type="system" weight="bold" pointSize="46"/>
+                                        <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="BNG-rl-001">
+                                        <rect key="frame" x="42.5" y="63" width="44" height="3"/>
+                                        <color key="backgroundColor" name="AccentColor"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="44" id="BNG-cn-001"/>
+                                            <constraint firstAttribute="height" constant="3" id="BNG-cn-002"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                            </stackView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="BNG-sa-001"/>
+                        <color key="backgroundColor" name="LaunchBackground"/>
+                        <constraints>
+                            <constraint firstItem="BNG-st-001" firstAttribute="centerX" secondItem="BNG-vw-001" secondAttribute="centerX" id="BNG-cn-003"/>
+                            <constraint firstItem="BNG-st-001" firstAttribute="centerY" secondItem="BNG-vw-001" secondAttribute="centerY" id="BNG-cn-004"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="BNG-fr-001" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="53" y="55"/>
+        </scene>
+    </scenes>
+    <resources>
+        <namedColor name="AccentColor">
+            <color red="0.94901960784313721" green="0.70588235294117652" blue="0.25490196078431371" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="LaunchBackground">
+            <color red="0.04313725490196078" green="0.050980392156862744" blue="0.074509803921568626" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>

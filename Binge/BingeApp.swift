@@ -24,10 +24,33 @@ struct BingeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
                 .preferredColorScheme(.dark)
                 .environment(settings)
         }
         .modelContainer(container)
+    }
+}
+
+/// The app, under the launch curtain.
+///
+/// `ContentView` is built and running underneath from the very first frame — its
+/// `task` (reconciling reminders, deciding which tab to open on) does its work while
+/// the curtain is still up, so lifting it reveals a screen that's already settled
+/// rather than one that's still assembling itself.
+private struct RootView: View {
+    @State private var isLaunching = true
+
+    var body: some View {
+        ZStack {
+            ContentView()
+
+            if isLaunching {
+                LaunchCurtain { isLaunching = false }
+                    // The curtain fades; the app is already behind it, so this reads
+                    // as a cross-fade without having to animate both halves.
+                    .transition(.opacity)
+            }
+        }
     }
 }
