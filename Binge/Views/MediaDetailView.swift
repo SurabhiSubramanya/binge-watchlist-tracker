@@ -252,42 +252,83 @@ struct MediaDetailView: View {
                     }
                 }
                 .tint(.accentColor)
-                .padding()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
 
                 if notificationsDenied {
                     Text("Notifications are turned off for Binge. Turn them on in the Settings app to get release reminders.")
                         .font(.caption)
                         .foregroundStyle(.orange)
-                        .padding(.horizontal)
+                        .padding(.horizontal, 16)
                         .padding(.bottom, 8)
                 }
 
-                Divider().overlay(.white.opacity(0.1))
+                rowDivider
             }
 
             Button {
                 Task { await setStatus(item.watchStatus == .watched ? .wantToWatch : .watched) }
             } label: {
-                Label(
+                actionRow(
                     item.watchStatus == .watched ? "Move to Want to Watch" : "Mark as Watched",
-                    systemImage: item.watchStatus == .watched ? "bookmark" : "checkmark.circle"
+                    systemImage: item.watchStatus == .watched ? "bookmark" : "checkmark.circle",
+                    tint: .white
                 )
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
             }
+            .buttonStyle(.plain)
 
-            Divider().overlay(.white.opacity(0.1))
+            rowDivider
 
             Button(role: .destructive) {
                 confirmingRemove = true
             } label: {
-                Label("Remove from Library", systemImage: "trash")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+                actionRow("Remove from Library", systemImage: "trash", tint: .red)
             }
+            .buttonStyle(.plain)
         }
         .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .padding(.horizontal)
+    }
+
+    /// One row of the actions card.
+    ///
+    /// Deliberately *not* a `Label` inside a default-styled `Button`, which is what
+    /// this used to be. iOS's **Button Shapes** accessibility setting draws a filled
+    /// capsule behind every system-styled button and paints it with the accent colour:
+    /// that turned these two rows into fat olive pills, inflated their icons, and
+    /// swallowed the destructive red on Remove so that deleting a title looked
+    /// identical to marking it watched.
+    ///
+    /// These are *list rows* — the same thing Settings shows — not pieces of button
+    /// chrome, so they're drawn as rows and the style is `.plain`. Nothing here is
+    /// left to the system to decorate, which is what makes the screen render the same
+    /// whatever the user has switched on.
+    private func actionRow(_ title: String, systemImage: String, tint: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .imageScale(.medium)
+                // A fixed column, so the two titles start at the same x even though
+                // a trash can and a tick are different widths.
+                .frame(width: 24)
+
+            Text(title)
+
+            Spacer(minLength: 0)
+        }
+        .font(.body)
+        .foregroundStyle(tint)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        // The whole row is the target — not just the few points of text in it.
+        .contentShape(Rectangle())
+    }
+
+    /// Inset to line up with the row titles, the way a system list separator does.
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(.white.opacity(0.1))
+            .frame(height: 0.5)
+            .padding(.leading, 52)
     }
 
     // MARK: - Reminder

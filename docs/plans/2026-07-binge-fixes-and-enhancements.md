@@ -221,6 +221,50 @@ nothing has been watched yet (a pair of zeroes is not a fact worth a bar of chro
   the Simulator: it reads "1 MOVIE / 1 TV SHOW".
 - 5 new tests (50 total).
 
+### Fix 5 — Detail-screen action rows render as fat tinted pills ⏳
+*Fixed 2026-07-12 · branch `fix/05-detail-action-rows` · awaiting review*
+
+**Symptom.** On the physical iPhone, "Mark as Watched" and "Remove from Library" each
+sat inside a big filled olive capsule with an oversized icon, and *both* were amber —
+so deleting a title looked exactly like marking it watched. On the Simulator the same
+build looked completely fine, which is what made it interesting.
+
+**Cause.** The user has **Button Shapes** switched on (Settings → Accessibility →
+Display & Text Size → Button Shapes). With it on, iOS draws a filled shape behind every
+system-styled `Button` and paints it with the ambient tint — here `.accentColor`, set on
+the `TabView` in `ContentView` and inherited all the way down. That single setting
+produced all three complaints at once: the pill, the inflated icon, and the loss of the
+destructive red (the accent tint wins over the `.destructive` role).
+
+The rows were `Label`s inside default-styled `Button`s, i.e. they were asking the system
+to decorate them. The system obliged.
+
+**Fix.** Draw them as what they actually are — *list rows*, the same thing Settings
+shows — and stop leaving anything to the system to decorate:
+- `.buttonStyle(.plain)` on both, so no system button chrome is drawn at all.
+- An explicit `actionRow`: icon in a **fixed 24pt column** (so a trash can and a tick
+  start their titles at the same x), `.font(.body)` so it still honours Dynamic Type,
+  and `.contentShape(Rectangle())` so the whole row is the tap target rather than just
+  the text.
+- Explicit `.red` on Remove, so the destructive colour can't be tinted away.
+- Inset separators, aligned to the titles like a system list.
+
+**Notes worth keeping:**
+- **It only reproduces with Button Shapes on**, which is why it was invisible on the
+  Simulator. `simctl ui` can't toggle it — but
+  `simctl spawn <udid> defaults write com.apple.Accessibility ButtonShapesEnabled -bool YES`
+  can, and that reproduced the bug pixel for pixel. **Verified both ways**: the screen
+  now renders identically with the setting on *and* off. Re-use this trick for any
+  "looks wrong on the phone, fine on the Simulator" report — the difference is usually
+  an accessibility setting, not the hardware.
+- **The first scaffold lied.** Opening `MediaDetailView` directly, outside `ContentView`,
+  dropped the `.tint(.accentColor)` that the real app inherits from the `TabView` — so
+  Remove came out red and the bug half-vanished. A scaffold has to reproduce the *ambient
+  environment*, not just the screen. The `.tint` was added to it before trusting anything
+  it showed.
+- Not defeating the accessibility setting, just declining to be decorated by it: the rows
+  live in a grouped card with separators and read as tappable rows the way Settings' do.
+
 ## Backlog
 - **App icon / logo, and reuse it on the launch screen.** Deferred by the user. Binge
   currently ships the empty `AppIcon` placeholder, so the Home Screen shows a blank
