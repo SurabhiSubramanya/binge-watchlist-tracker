@@ -221,8 +221,8 @@ nothing has been watched yet (a pair of zeroes is not a fact worth a bar of chro
   the Simulator: it reads "1 MOVIE / 1 TV SHOW".
 - 5 new tests (50 total).
 
-### Fix 5 — Detail-screen action rows render as fat tinted pills ⏳
-*Fixed 2026-07-12 · branch `fix/05-detail-action-rows` · awaiting review*
+### Fix 5 — Detail-screen action rows render as fat tinted pills ✅
+*Fixed 2026-07-12 · commit `3174973` · branch `fix/05-detail-action-rows` · merged to `main`*
 
 **Symptom.** On the physical iPhone, "Mark as Watched" and "Remove from Library" each
 sat inside a big filled olive capsule with an oversized icon, and *both* were amber —
