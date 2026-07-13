@@ -44,8 +44,8 @@ the grid to centre. One line changed.
   opens on Library, not Settings), then reverted before commit. Re-do this trick
   rather than reinventing it — but keep it **out** of the committed diff.
 
-### Fix 2 — Posters sometimes don't load in the library grid ⏳
-*Fixed 2026-07-12 · branch `fix/02-poster-loading` · awaiting review*
+### Fix 2 — Posters sometimes don't load in the library grid ✅
+*Fixed 2026-07-12 · commit `1c8062b` · branch `fix/02-poster-loading` · merged to `main`*
 
 **Symptom.** A poster is missing from the Library grid — a grey fallback cell —
 but opening that same title's detail page shows the artwork perfectly. Different
