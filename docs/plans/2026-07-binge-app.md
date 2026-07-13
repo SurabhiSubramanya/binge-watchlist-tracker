@@ -15,6 +15,8 @@ approved, and merged to `main` on its own branch.
 - ✅ **Subtask 8 — Detail screen** · completed 2026-07-12 · commit `bfd8840` (branch `feature/08-detail`, merged to `main`). `MediaDetailView`: backdrop/poster/date/genres/overview, "Where to watch" provider logos (with an explicit *"Not available to stream in <region>"* state, not a blank), and actions — Want↔Watched, remove, refresh, reminder toggle. Library cells now tap through. Refresh follows a revised release date and re-syncs the reminder. **This also closed out Subtask 9's end-to-end verification** — the toggle scheduled a real notification on device, and the permission prompt fired on the toggle rather than at app launch.
 - ⏳ **Subtask 10 — Setup & run documentation** — the only thing left; branch `feature/10-docs`.
 
+> **Post-feature-complete work lives in [`2026-07-binge-fixes-and-enhancements.md`](2026-07-binge-fixes-and-enhancements.md)** — bugs found in real use and functionality beyond the original scope. This plan stays scoped to the ten build subtasks.
+
 > **All nine implementation subtasks are done.** The app is feature-complete and
 > running on the user's iPhone 13 Pro: token in the Keychain, search → add →
 > library → detail → reminders, all against live TMDB.
