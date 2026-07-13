@@ -14,7 +14,24 @@ approved. Same rhythm as the subtasks — no batching, even for small related fi
 Bookkeeping (marking an entry below merged) lands as its own commit on `main`, *not*
 in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 
-## Fixed
+## Status
+*As of 2026-07-12.*
+
+**`main` is at `499298c`. Five items done, all merged, all verified on the physical
+iPhone. 50 tests green.** The build sitting on the phone is current with `main`.
+
+| # | Item | Commit |
+|---|------|--------|
+| 1 | Poster cells misaligned in the grid | `1d42913` |
+| 2 | Posters intermittently fail to load | `1c8062b` |
+| 3 | White launch screen, no branding | `a6d8bb5` |
+| 4 | Watched movie/TV counts *(enhancement)* | `2c15038` |
+| 5 | Detail action rows render as tinted pills | `3174973` |
+
+Nothing is in flight. Next up is whatever gets picked off the [Backlog](#backlog) —
+the app icon is the one the user has explicitly parked for later.
+
+## Done
 
 ### Fix 1 — Poster cells misaligned in the library grid ✅
 *Fixed 2026-07-12 · commit `1d42913` · branch `fix/01-poster-alignment` · merged to `main`*
@@ -178,8 +195,8 @@ there would still be a hard cut from a static image to a live UI.
 - Verified on the Simulator by capturing frames across a cold launch after a fresh
   install (an uninstall also clears iOS's cached launch snapshot, which otherwise
   survives and will happily keep showing you the old one).
-- **The empty space above the wordmark is deliberate** — it's the slot for the app
-  icon, which is the next change.
+- **The empty space above the wordmark is deliberate** — it's the slot for the app icon.
+  (Still empty: the icon was deferred, see Backlog.)
 
 ### Change 4 — Watched counts under the Library grid ✅
 *Added 2026-07-12 · commit `2c15038` · branch `feat/04-watched-counts` · merged to `main`*
@@ -266,14 +283,64 @@ shows — and stop leaving anything to the system to decorate:
   live in a grouped card with separators and read as tappable rows the way Settings' do.
 
 ## Backlog
-- **App icon / logo, and reuse it on the launch screen.** Deferred by the user. Binge
-  currently ships the empty `AppIcon` placeholder, so the Home Screen shows a blank
-  white tile. Once there's a logo it drops into the gap above the wordmark in both
-  `LaunchScreen.storyboard` and `LaunchCurtain`.
-- **The detail page's backdrop and provider logos still use bare `AsyncImage`.**
-  Same latent weakness as Fix 2 — no cache, no retry — but a much milder symptom
-  (a flat rectangle behind the header, or a blank provider tile), and they weren't
-  what was reported. Moving them to `RemoteImage` is a small, obvious follow-up.
+Roughly in the order they're worth doing. New bugs and enhancements get appended as
+they're reported, then promoted to **Done** with their branch and commit once merged.
 
-New bugs and enhancements get appended here as they're reported, then promoted to
-**Fixed** with their branch and commit once merged.
+- **Audit the rest of the app for the Button Shapes bug (Fix 5).** *Highest value —
+  this is a known-live defect, not a hypothetical.* Fix 5 fixed the two rows the user
+  reported, but the cause is not specific to that screen: **any** default-styled `Button`
+  in the app gets the same filled capsule and accent tint on their phone, because the
+  setting is on. Likely candidates: **"Save token"** and **"Get a token from TMDB"** in
+  `SettingsView`, and the **add-to-library** control in `SearchView`. Deliberately not
+  swept up into Fix 5 — the user reported one screen and widening a fix past the report
+  is how regressions get smuggled in — but it should be its own pass. Reproduce with the
+  `ButtonShapesEnabled` trick below; the remedy is the same as Fix 5.
+- **App icon / logo, and reuse it on the launch screen.** *Parked by the user, to come
+  back to.* Binge still ships the empty `AppIcon` placeholder, so the Home Screen shows a
+  blank white tile. Two assets are needed, not one:
+  - the **icon**: a fully *opaque square* (iOS masks the corners and forbids transparency);
+  - the **mark on its own**, transparent, for the launch screen — it sits on the dark
+    `#0B0D13` ground.
+
+  It then drops into the gap above the wordmark in **both** `LaunchScreen.storyboard` and
+  `LaunchCurtain`, which have to be changed together (see Fix 3).
+- **The detail page's backdrop and provider logos still use bare `AsyncImage`.**
+  Same latent weakness as Fix 2 — no cache, no retry — but a much milder symptom (a flat
+  rectangle behind the header, or a blank provider tile), and they weren't what was
+  reported. Moving them to `RemoteImage` is small and obvious.
+
+## Techniques that keep working
+Hard-won, and re-derived more than once. Reach for these before inventing something.
+
+**Seeing anything at all on the Simulator.** It has no TMDB token and an empty library,
+and there's no CLI way to type one in. Point `BingeApp` at `SampleLibrary.previewContainer`
+behind a `-seed-sample-library` launch argument, with `AppSettings.preview(token:)` so the
+app opens on Library rather than being bounced to Settings. **Always revert before commit** —
+this has never once belonged in a shipped diff.
+
+**Reaching a screen you can't tap to.** `simctl` cannot tap, so a detail screen is
+unreachable by navigation. Add a scaffold that opens straight onto it (`-detail-scaffold`).
+But: **a scaffold that skips `ContentView` also skips the ambient environment it
+establishes** — `.tint(.accentColor)` on the `TabView` cascades into every screen, and
+without it Fix 5's bug half-vanished and nearly sent the diagnosis the wrong way. Reproduce
+the environment, not just the view.
+
+**Screenshotting past the launch curtain.** Since Fix 3 the app opens on ~1s of animation,
+so a screenshot taken straight after `launch` captures the wordmark, not the app. Fire the
+screenshot in a loop (~12 iterations to the same path) and keep the last. Separately: a
+screenshot in the *same* Bash call as `launch` catches the springboard — see the memory note.
+
+**Bugs that only happen on the phone.** Usually an accessibility setting, not the hardware.
+`simctl ui <udid>` covers `appearance`, `content_size` and `increase_contrast` — but **not**
+Button Shapes, which is the one that bit us. That one needs:
+
+```
+xcrun simctl spawn <udid> defaults write com.apple.Accessibility ButtonShapesEnabled -bool YES
+```
+
+Then verify the fix with the setting forced **both on and off** — the goal is a screen that
+renders the same either way.
+
+**Choosing a visual design.** Don't mock it in ASCII; the user rightly rejected that. Build
+the variants behind a launch argument, screenshot each in the running app, show them, delete
+the losers (see Change 4).
