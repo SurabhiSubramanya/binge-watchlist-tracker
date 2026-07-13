@@ -112,8 +112,8 @@ what helps.
   retry/cache guarantees are pinned by the unit tests rather than by a screenshot.
 - Fixes Search's grid too, since `MediaPosterView` is shared.
 
-### Fix 3 — Blank white screen at launch, then the app snaps in ⏳
-*Fixed 2026-07-12 · branch `fix/03-launch-screen` · awaiting review*
+### Fix 3 — Blank white screen at launch, then the app snaps in ✅
+*Fixed 2026-07-12 · commit `a6d8bb5` · branch `fix/03-launch-screen` · merged to `main`*
 
 **Symptom.** Launching Binge showed a blank **white** screen, which then jumped
 straight to the app with nothing in between. No app name, no branding, and a white
