@@ -30,8 +30,8 @@ the phone is current with `main`.
 | 5 | Detail action rows render as tinted pills | `3174973` |
 | 6 | App icon + launch mark *(enhancement)* | `fee296c` · `16b3fa3` |
 
-Nothing is in flight. Next up is whatever gets picked off the [Backlog](#backlog) —
-the Button Shapes audit is the highest-value one still open.
+Nothing is in flight. The only open [Backlog](#backlog) item is moving the detail page's
+backdrop and provider logos off bare `AsyncImage` (the Button Shapes audit was declined).
 
 ## Done
 
@@ -341,19 +341,14 @@ then iterated on it directly rather than supplying artwork.
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
 they're reported, then promoted to **Done** with their branch and commit once merged.
 
-- **Audit the rest of the app for the Button Shapes bug (Fix 5).** *Highest value —
-  this is a known-live defect, not a hypothetical.* Fix 5 fixed the two rows the user
-  reported, but the cause is not specific to that screen: **any** default-styled `Button`
-  in the app gets the same filled capsule and accent tint on their phone, because the
-  setting is on. Likely candidates: **"Save token"** and **"Get a token from TMDB"** in
-  `SettingsView`, and the **add-to-library** control in `SearchView`. Deliberately not
-  swept up into Fix 5 — the user reported one screen and widening a fix past the report
-  is how regressions get smuggled in — but it should be its own pass. Reproduce with the
-  `ButtonShapesEnabled` trick below; the remedy is the same as Fix 5.
 - **The detail page's backdrop and provider logos still use bare `AsyncImage`.**
   Same latent weakness as Fix 2 — no cache, no retry — but a much milder symptom (a flat
   rectangle behind the header, or a blank provider tile), and they weren't what was
   reported. Moving them to `RemoteImage` is small and obvious.
+
+*Considered and dropped:* a wider **Button Shapes audit** (sweeping `SettingsView` and
+`SearchView` for the same defect Fix 5 fixed). The user explicitly declined it on
+2026-07-15 — don't re-add it.
 
 ## Techniques that keep working
 Hard-won, and re-derived more than once. Reach for these before inventing something.
