@@ -17,9 +17,9 @@ in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 ## Status
 *As of 2026-07-15.*
 
-**`main` is at `16b3fa3`. Six items done, all merged, all verified. 50 tests green.**
-Feat 6 (the app icon + launch mark) is verified on the physical iPhone; the build on
-the phone is current with `main`.
+**`main` is at `a8e5bf3`. Seven items done, all merged, all verified. 50 tests green.**
+Feats 6 and 7 are verified on the physical iPhone; the build on the phone is current
+with `main`.
 
 | # | Item | Commit |
 |---|------|--------|
@@ -29,6 +29,7 @@ the phone is current with `main`.
 | 4 | Watched movie/TV counts *(enhancement)* | `2c15038` |
 | 5 | Detail action rows render as tinted pills | `3174973` |
 | 6 | App icon + launch mark *(enhancement)* | `fee296c` · `16b3fa3` |
+| 7 | Preview a search result before adding *(enhancement)* | `a8e5bf3` |
 
 Nothing is in flight. The only open [Backlog](#backlog) item is moving the detail page's
 backdrop and provider logos off bare `AsyncImage` (the Button Shapes audit was declined).
@@ -336,6 +337,42 @@ then iterated on it directly rather than supplying artwork.
 - The `LaunchScreen.storyboard` header comment and `LaunchCurtain`'s doc comment now both
   list the 100×120 mark in the load-bearing geometry, so the matched-pair invariant stays
   documented on both sides.
+
+### Feat 7 — Preview a search result before adding it ✅
+*Added 2026-07-15 · commit `a8e5bf3` · branch `feat/07-search-preview` · merged to `main`*
+
+**Ask.** "Preview the movie/TV detail after tapping a search result — to be sure it's the
+right one before adding." Before this, tapping a result went straight to an add dialog with
+nothing but the title to go on.
+
+**What shipped.** A new `SearchResultPreview` sheet. Tapping any result opens a read-only
+preview — backdrop, poster, title, type · release date, an Upcoming badge, the overview,
+and genres — and the **add happens from inside the preview** (Want to Watch / Watched).
+Opens as a half-height "pop up" (`.presentationDetents([.medium, .large])`) you can drag up
+for the full synopsis. Already-added titles preview too and say so, with no add buttons.
+
+**Notes worth keeping:**
+- **The preview takes a `TMDBSearchResult`, not a `MediaItem`** — the title isn't in the
+  store yet, so `MediaDetailView` (bound to a `@Model` and full of mutations) can't be
+  reused. The preview is deliberately presentational: it takes an `onAdd: (WatchStatus) ->
+  Void` closure and `SearchView` keeps the insert/enrich + `modelContext`.
+- **Progressive, not blocking.** A search row already carries title/overview/artwork/date,
+  so the sheet paints immediately; genres and the fuller overview stream in from `details`
+  on a best-effort `.task` (a failure just leaves the search data, which is enough to
+  confirm). Artwork needs no token — `image.tmdb.org` is public — only the API does.
+- **The add buttons are Button-Shapes-safe** — drawn `.buttonStyle(.plain)` with explicit
+  backgrounds (amber primary, subtle secondary), so the accessibility setting can't repaint
+  them into tinted pills the way it did the Fix 5 rows. **Verified with `ButtonShapesEnabled`
+  forced on** via the scaffold: the custom buttons render identically, only the system
+  "Close" nav button picks up the standard underline (expected, not a regression). This is
+  the one place Feat 7 touched the (declined) Button-Shapes concern — for *new* chrome, not
+  a sweep of the old.
+- **`.sheet(item: $pendingAdd)` replaced the `confirmationDialog`**, so the old
+  `showingAddDialog` binding is gone and the grid tap no longer guards on "already added"
+  (an in-library title is worth previewing too).
+- Verified with the scaffold trick from Fix 5: `-search-preview-scaffold` opened the sheet
+  onto a sample result with real artwork paths, reproducing the ambient `.tint(.accentColor)`.
+  **Reverted before commit** — the diff is just `SearchView.swift` + the new file.
 
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
