@@ -15,10 +15,11 @@ Bookkeeping (marking an entry below merged) lands as its own commit on `main`, *
 in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 
 ## Status
-*As of 2026-07-12.*
+*As of 2026-07-15.*
 
-**`main` is at `499298c`. Five items done, all merged, all verified on the physical
-iPhone. 50 tests green.** The build sitting on the phone is current with `main`.
+**`main` is at `16b3fa3`. Six items done, all merged, all verified. 50 tests green.**
+Feat 6 (the app icon + launch mark) is verified on the physical iPhone; the build on
+the phone is current with `main`.
 
 | # | Item | Commit |
 |---|------|--------|
@@ -27,9 +28,10 @@ iPhone. 50 tests green.** The build sitting on the phone is current with `main`.
 | 3 | White launch screen, no branding | `a6d8bb5` |
 | 4 | Watched movie/TV counts *(enhancement)* | `2c15038` |
 | 5 | Detail action rows render as tinted pills | `3174973` |
+| 6 | App icon + launch mark *(enhancement)* | `fee296c` · `16b3fa3` |
 
 Nothing is in flight. Next up is whatever gets picked off the [Backlog](#backlog) —
-the app icon is the one the user has explicitly parked for later.
+the Button Shapes audit is the highest-value one still open.
 
 ## Done
 
@@ -282,6 +284,59 @@ shows — and stop leaving anything to the system to decorate:
 - Not defeating the accessibility setting, just declining to be decorated by it: the rows
   live in a grouped card with separators and read as tappable rows the way Settings' do.
 
+### Feat 6 — App icon + launch mark ✅
+*Added 2026-07-15 · commits `fee296c` (icon) + `16b3fa3` (launch mark) · branch
+`feat/06-app-icon` · merged to `main`*
+
+**Ask.** Replace the blank white placeholder icon. The user supplied a reference — a
+gradient **B** built from a strip of film with a play button in its bowl, a popcorn
+bucket at its foot, on a near-black rounded square — and asked for "something like that,"
+then iterated on it directly rather than supplying artwork.
+
+**What shipped.**
+- **The icon**: a 1024×1024 opaque master (`AppIcon-1024.png`). The B is a single
+  gradient shape (peach→coral→magenta→purple) masked to punch out the play triangle, a
+  lower counter, and the film-strip sprocket holes; the popcorn bucket is tucked into the
+  B's lower-right bowl. iOS masks the corners and renders every smaller size.
+- **The launch mark**: the same emblem, transparent, no rounded square, as a `LaunchMark`
+  imageset (100×120 at 1×/2×/3×). It drops into the slot above the wordmark in **both**
+  `LaunchScreen.storyboard` and `LaunchCurtain` — the matched pair from Fix 3 — so the
+  launch→app hand-off stays seamless. The gold rule was kept (the user's call).
+
+**How it was built (reusable).**
+- **Authored as SVG, rasterised with headless Chrome.** No SVG rasteriser is installed
+  (`rsvg-convert`/ImageMagick absent), but `/Applications/Google Chrome.app` is:
+  `--headless=new --screenshot --window-size=1024,1024` on an HTML wrapper renders a crisp
+  PNG. A template (`icon_tmpl.svg`) + a Python build step (`build_icon.py`) injects the
+  popcorn and emits both `icon.svg` (opaque) and `mark.svg` (transparent, shadow stripped)
+  so the two never drift. **This whole toolchain lived in the scratchpad, not the repo** —
+  only the final PNGs are committed.
+- **Showed the work as an Artifact, not ASCII.** The icon was previewed masked at real
+  sizes, in a Home-Screen grid, and as the launch lockup — the "choose a visual design"
+  rule from Change 4, adapted (an icon can't be judged from a drawing of it).
+- **Popcorn took three tries.** Smooth circles read as *bubbles*; deep-valleyed lobes read
+  as *stars*; the winner is cloud-lobed blobs — a single closed path per kernel (so the tan
+  outline is clean) with shallow rounded bumps, generated in `popcorn.py`.
+
+**Notes worth keeping:**
+- **`hasAlpha: no` for free.** Chrome flattened the fully-opaque icon to RGB, so the App
+  Store's no-alpha rule is satisfied without a flatten pass. Check with `sips -g hasAlpha`.
+- **The launch snapshot cache needed `simctl erase`, not `uninstall`.** Fix 3 said uninstall
+  clears it; on this well-worn sim it didn't — the storyboard kept rendering the *old*
+  mark-less launch screen while `LaunchCurtain` (runtime SwiftUI) showed the new one, i.e.
+  a visible jump that was a **cache artifact, not a real bug**. `xcrun simctl erase <udid>`
+  (then reboot/reinstall) gave a truly cold launch and both halves matched. On a real device
+  a fresh build install regenerates it.
+- **Installed to the phone over the top, never uninstalled** — uninstalling wipes the
+  Keychain TMDB token (the standing gotcha), so `devicectl device install` over the existing
+  app preserved the token and library.
+- **SourceKit cried wolf.** The editor flagged `Color.bingeGround` "has no member" and a
+  missing Preview macro plugin in `LaunchCurtain.swift`; `xcodebuild` compiled both cleanly.
+  Editor-indexing false positives — trust the build.
+- The `LaunchScreen.storyboard` header comment and `LaunchCurtain`'s doc comment now both
+  list the 100×120 mark in the load-bearing geometry, so the matched-pair invariant stays
+  documented on both sides.
+
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
 they're reported, then promoted to **Done** with their branch and commit once merged.
@@ -295,15 +350,6 @@ they're reported, then promoted to **Done** with their branch and commit once me
   swept up into Fix 5 — the user reported one screen and widening a fix past the report
   is how regressions get smuggled in — but it should be its own pass. Reproduce with the
   `ButtonShapesEnabled` trick below; the remedy is the same as Fix 5.
-- **App icon / logo, and reuse it on the launch screen.** *Parked by the user, to come
-  back to.* Binge still ships the empty `AppIcon` placeholder, so the Home Screen shows a
-  blank white tile. Two assets are needed, not one:
-  - the **icon**: a fully *opaque square* (iOS masks the corners and forbids transparency);
-  - the **mark on its own**, transparent, for the launch screen — it sits on the dark
-    `#0B0D13` ground.
-
-  It then drops into the gap above the wordmark in **both** `LaunchScreen.storyboard` and
-  `LaunchCurtain`, which have to be changed together (see Fix 3).
 - **The detail page's backdrop and provider logos still use bare `AsyncImage`.**
   Same latent weakness as Fix 2 — no cache, no retry — but a much milder symptom (a flat
   rectangle behind the header, or a blank provider tile), and they weren't what was
@@ -343,4 +389,22 @@ renders the same either way.
 
 **Choosing a visual design.** Don't mock it in ASCII; the user rightly rejected that. Build
 the variants behind a launch argument, screenshot each in the running app, show them, delete
-the losers (see Change 4).
+the losers (see Change 4). For artwork the app can't display at design time (an app icon),
+the equivalent is an **Artifact**: render it masked, at real sizes, in context — then verify
+the winner on the real Home Screen (see Feat 6).
+
+**Making raster artwork with no design tools.** There's no SVG rasteriser installed, but
+headless Chrome is: `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+--headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1
+--window-size=W,H --screenshot=out.png "file://…/wrapper.html"`. Add
+`--default-background-color=00000000` for a transparent export. Author the art as SVG (a
+template + a small Python build step keeps an opaque and a transparent variant in sync),
+`sips -g hasAlpha` to confirm the icon is flat, and **keep the whole toolchain in the
+scratchpad** — only the final PNGs belong in the repo (see Feat 6).
+
+**A launch-screen change that won't show up** is almost always the OS's cached launch
+snapshot, not your code. Fix 3 says `uninstall` clears it; on a well-worn Simulator it may
+*not* — the storyboard keeps rendering the old still while `LaunchCurtain` (runtime) shows
+the new one, which looks exactly like the two have drifted. `xcrun simctl erase <udid>`
+(then reboot + reinstall) forces a truly cold launch. A real device regenerates it on a
+fresh build install.
