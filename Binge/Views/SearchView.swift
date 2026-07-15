@@ -31,16 +31,15 @@ struct SearchView: View {
             // `.task(id:)` cancels the in-flight run on every keystroke, which is
             // what makes the debounce below work.
             .task(id: query) { await runSearch() }
-            .confirmationDialog(
-                pendingAdd?.title ?? "",
-                isPresented: showingAddDialog,
-                titleVisibility: .visible
-            ) {
-                if let result = pendingAdd {
-                    Button("Add to Want to Watch") { add(result, as: .wantToWatch) }
-                    Button("Add to Watched") { add(result, as: .watched) }
-                    Button("Cancel", role: .cancel) {}
-                }
+            // Tapping a result opens a read-only preview to confirm it's the right
+            // title, *then* offers to add it — rather than jumping straight to an
+            // add dialog with nothing but the name to go on.
+            .sheet(item: $pendingAdd) { result in
+                SearchResultPreview(
+                    result: result,
+                    isInLibrary: isInLibrary(result),
+                    onAdd: { add(result, as: $0) }
+                )
             }
         }
     }
@@ -95,8 +94,8 @@ struct SearchView: View {
             LazyVGrid(columns: columns, spacing: 18) {
                 ForEach(results) { result in
                     Button {
-                        // Already added? Then there's nothing to choose.
-                        guard !isInLibrary(result) else { return }
+                        // Open the preview for any result — an already-added title
+                        // still previews (it just says so, with no add buttons).
                         pendingAdd = result
                     } label: {
                         MediaPosterView(
@@ -171,13 +170,6 @@ struct SearchView: View {
 
     private func isInLibrary(_ result: TMDBSearchResult) -> Bool {
         libraryKeys.contains(result.id)
-    }
-
-    private var showingAddDialog: Binding<Bool> {
-        Binding(
-            get: { pendingAdd != nil },
-            set: { if !$0 { pendingAdd = nil } }
-        )
     }
 
     private func add(_ result: TMDBSearchResult, as status: WatchStatus) {
