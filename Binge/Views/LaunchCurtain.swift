@@ -12,10 +12,10 @@ import SwiftUI
 /// what the user sees is one continuous screen that then lifts, rather than two
 /// screens swapped.
 ///
-/// **The geometry below is load-bearing.** 46pt bold, a 44×3 rule, 16pt apart,
-/// centred — `LaunchScreen.storyboard` carries exactly the same numbers. If the two
-/// ever drift apart, the app will visibly jump at the moment of launch, which is the
-/// one thing this view exists to prevent.
+/// **The geometry below is load-bearing.** A 100×120 mark, "Binge" in 46pt bold, a
+/// 44×3 rule, 16pt apart, centred — `LaunchScreen.storyboard` carries exactly the same
+/// numbers. If the two ever drift apart, the app will visibly jump at the moment of
+/// launch, which is the one thing this view exists to prevent.
 struct LaunchCurtain: View {
     /// Called when the curtain is done and the app should be revealed.
     let onFinish: () -> Void
@@ -31,6 +31,14 @@ struct LaunchCurtain: View {
             Color.bingeGround.ignoresSafeArea()
 
             VStack(spacing: 16) {
+                // The app-icon emblem (the popcorn-B), matched pixel-for-pixel to
+                // `LaunchMark` in LaunchScreen.storyboard: 100x120, scale-aspect-fit.
+                // It lifts with the wordmark via the `scaleEffect` below.
+                Image("LaunchMark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 120)
+
                 Text("Binge")
                     .font(.system(size: 46, weight: .bold))
                     .foregroundStyle(.white)

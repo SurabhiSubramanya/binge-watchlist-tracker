@@ -7,13 +7,13 @@
     *text* on it, and the app name is the whole point of this screen.
 
     Every value here is mirrored, exactly, by `LaunchCurtain` in SwiftUI: same
-    wordmark, same 46pt bold, same 44x3 amber rule, same 16pt gap, same centre. The
-    curtain's first frame is therefore pixel-identical to this, which is what makes
-    the hand-off from launch screen to app invisible. **Change one, change the other**
-    or the app will visibly jump at launch.
+    100x120 `LaunchMark`, same "Binge" wordmark in 46pt bold, same 44x3 amber rule,
+    same 16pt gaps, same centre. The curtain's first frame is therefore pixel-identical
+    to this, which is what makes the hand-off from launch screen to app invisible.
+    **Change one, change the other** or the app will visibly jump at launch.
 
-    The empty space above the wordmark is deliberate: it's where the app icon goes
-    once there is one.
+    The `LaunchMark` above the wordmark is the app-icon emblem (the popcorn-B), on its
+    own with no rounded square, sitting on the same dark ground.
 -->
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BNG-vc-001">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
@@ -34,6 +34,13 @@
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="BNG-st-001">
                                 <rect key="frame" x="132" y="393" width="129" height="66"/>
                                 <subviews>
+                                    <imageView opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" image="LaunchMark" id="BNG-im-001">
+                                        <rect key="frame" x="14.5" y="0.0" width="100" height="120"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="100" id="BNG-cn-101"/>
+                                            <constraint firstAttribute="height" constant="120" id="BNG-cn-102"/>
+                                        </constraints>
+                                    </imageView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Binge" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BNG-lb-001">
                                         <rect key="frame" x="0.0" y="0.0" width="129" height="47"/>
                                         <fontDescription key="fontDescription" type="system" weight="bold" pointSize="46"/>
@@ -65,6 +72,7 @@
         </scene>
     </scenes>
     <resources>
+        <image name="LaunchMark" width="100" height="120"/>
         <namedColor name="AccentColor">
             <color red="0.94901960784313721" green="0.70588235294117652" blue="0.25490196078431371" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
