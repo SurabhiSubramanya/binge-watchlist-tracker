@@ -17,9 +17,9 @@ in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 ## Status
 *As of 2026-07-15.*
 
-**`main` is at `a8e5bf3`. Seven items done, all merged, all verified. 50 tests green.**
-Feats 6 and 7 are verified on the physical iPhone; the build on the phone is current
-with `main`.
+**`main` is at `8a68bb9`. Eight items done, all merged, all verified. 50 tests green.**
+Feats 6/7 and Fix 8 are verified on the physical iPhone; the build on the phone is
+current with `main`.
 
 | # | Item | Commit |
 |---|------|--------|
@@ -30,9 +30,10 @@ with `main`.
 | 5 | Detail action rows render as tinted pills | `3174973` |
 | 6 | App icon + launch mark *(enhancement)* | `fee296c` · `16b3fa3` |
 | 7 | Preview a search result before adding *(enhancement)* | `a8e5bf3` |
+| 8 | Detail backdrop + logos → RemoteImage *(+ lighter backdrop fade)* | `78d9536` · `8a68bb9` |
 
-Nothing is in flight. The only open [Backlog](#backlog) item is moving the detail page's
-backdrop and provider logos off bare `AsyncImage` (the Button Shapes audit was declined).
+Nothing is in flight, and the [Backlog](#backlog) is now empty — every reported bug and
+scoped enhancement is merged.
 
 ## Done
 
@@ -374,14 +375,52 @@ for the full synopsis. Already-added titles preview too and say so, with no add 
   onto a sample result with real artwork paths, reproducing the ambient `.tint(.accentColor)`.
   **Reverted before commit** — the diff is just `SearchView.swift` + the new file.
 
+### Fix 8 — Detail backdrop & provider logos off bare `AsyncImage` (+ a lighter fade) ✅
+*Fixed 2026-07-15 · commits `78d9536` (RemoteImage) + `8a68bb9` (fade) · branch
+`fix/08-remote-image` · merged to `main`*
+
+**Two things, one branch.** The backlog item was the first; the second was a fade problem
+the user spotted while reviewing the first on the phone.
+
+**Part 1 — `RemoteImage`.** The detail page's backdrop and its provider logos still handed
+their URLs to bare `AsyncImage` — the Fix 2 weakness (no cache, no retry), in the two spots
+Fix 2 didn't reach. Milder symptom (a blank rectangle behind the header, or a blank provider
+tile, only on a flaky connection — one request on a still screen usually succeeds), but the
+same fix. Both now load through `RemoteImage`/`ArtworkLoader`: a dropped fetch retries, a
+repeat visit paints from cache. The backdrop became a shared **`BackdropImage`** view (detail
+screen + search preview), so the logic lives in one place. **No bare `AsyncImage` remains in
+the app.**
+
+**Part 2 — the fade.** The backdrop faded *evenly* top-to-bottom
+(`[.clear, bingeGround.opacity(0.7), bingeGround]`), which meant it was already 70% dark by
+the midline — dimming the whole lower half of the artwork into a murky vignette. Reworked to
+a stops gradient that holds the **top half fully clear** and only ramps to the ground over
+the bottom, reaching dark right where the poster and title sit (so those stay readable) while
+the real colours of the image show. Same `BackdropImage`, so the search preview got it too.
+
+**Notes worth keeping:**
+- **The bug report said "poster"; it was the backdrop.** The user's screenshot showed a
+  darkened lower half; the first read was the small poster. Diagnosis pinned it: `MediaPosterView`
+  has no darkening overlay, `ArtworkLoader` returns the image untouched, and a downloaded raw
+  poster matched the on-screen poster exactly. **Tinting the fade gradient bright red** showed
+  it covered *only* the backdrop — the poster underneath was clean — which is when the user
+  clarified it was the backdrop. Re-use the red-tint trick to find what a gradient/scrim
+  actually covers.
+- **It was pre-existing, not a Part-1 regression.** The same even fade lived in the old inline
+  backdrop on `main`; Part 1 only moved it into `BackdropImage`. Worth stating so the fade fix
+  isn't mistaken for cleaning up after the `RemoteImage` move.
+- Kept as **two commits** on one branch — the `RemoteImage` move (the backlog item) and the
+  fade (a distinct bug found during its review) are separate concerns, even though they share
+  a file and shipped together.
+- Verified via the `-detail-scaffold` (a seeded item, ambient `.tint`), before/after on the
+  Simulator, then on the physical iPhone. **Reverted before commit.**
+
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
 they're reported, then promoted to **Done** with their branch and commit once merged.
 
-- **The detail page's backdrop and provider logos still use bare `AsyncImage`.**
-  Same latent weakness as Fix 2 — no cache, no retry — but a much milder symptom (a flat
-  rectangle behind the header, or a blank provider tile), and they weren't what was
-  reported. Moving them to `RemoteImage` is small and obvious.
+*Empty* — every reported bug and scoped enhancement through 2026-07-15 is merged. New
+items get appended here as they come up.
 
 *Considered and dropped:* a wider **Button Shapes audit** (sweeping `SettingsView` and
 `SearchView` for the same defect Fix 5 fixed). The user explicitly declined it on
@@ -440,3 +479,10 @@ snapshot, not your code. Fix 3 says `uninstall` clears it; on a well-worn Simula
 the new one, which looks exactly like the two have drifted. `xcrun simctl erase <udid>`
 (then reboot + reinstall) forces a truly cold launch. A real device regenerates it on a
 fresh build install.
+
+**"Which element is darkening this?"** When artwork looks dimmed and you can't tell which
+overlay/scrim/gradient is responsible, **tint the suspect bright red** and screenshot — the
+red shows exactly what it covers. In Fix 8 this proved in one shot that the fade covered only
+the backdrop and never touched the poster underneath, which redirected the whole diagnosis
+(and matched what the user actually meant). Cheaper than reasoning about z-order and negative
+padding, which is easy to get wrong.
