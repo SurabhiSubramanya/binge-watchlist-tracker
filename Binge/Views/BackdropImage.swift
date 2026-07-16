@@ -43,10 +43,18 @@ struct BackdropImage: View {
         .frame(maxWidth: .infinity)
         .clipped()
         .overlay {
-            // Fade the artwork into the page so the poster below it doesn't sit
-            // on a hard edge.
+            // Fade only the lower part into the ground — enough to seat the poster
+            // and title without a hard edge, while leaving the top half of the
+            // artwork at its true colours. An even top-to-bottom fade (what this
+            // was) dimmed the whole backdrop into a murky vignette that hid the
+            // real image below the midline.
             LinearGradient(
-                colors: [.clear, .bingeGround.opacity(0.7), .bingeGround],
+                stops: [
+                    .init(color: .clear, location: 0.0),
+                    .init(color: .clear, location: 0.5),
+                    .init(color: .bingeGround.opacity(0.85), location: 0.86),
+                    .init(color: .bingeGround, location: 1.0)
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
