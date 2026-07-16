@@ -57,7 +57,7 @@ struct SearchResultPreview: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 0) {
-            backdrop
+            BackdropImage(backdropPath: result.backdropPath, posterPath: result.posterPath, height: 190)
 
             HStack(alignment: .top, spacing: 14) {
                 MediaPosterView(
@@ -117,28 +117,6 @@ struct SearchResultPreview: View {
     private var isUpcoming: Bool {
         guard let date = result.releaseDate else { return false }
         return ReleaseDate.isUpcoming(date)
-    }
-
-    @ViewBuilder
-    private var backdrop: some View {
-        let url = TMDBService.backdropURL(path: result.backdropPath)
-            ?? TMDBService.posterURL(path: result.posterPath, size: .large)
-
-        AsyncImage(url: url) { image in
-            image.resizable().scaledToFill()
-        } placeholder: {
-            Rectangle().fill(.white.opacity(0.05))
-        }
-        .frame(height: 190)
-        .frame(maxWidth: .infinity)
-        .clipped()
-        .overlay {
-            LinearGradient(
-                colors: [.clear, .bingeGround.opacity(0.7), .bingeGround],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
     }
 
     // MARK: - Overview

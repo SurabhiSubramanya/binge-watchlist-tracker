@@ -58,7 +58,7 @@ struct MediaDetailView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 0) {
-            backdrop
+            BackdropImage(backdropPath: item.backdropPath, posterPath: item.posterPath)
 
             HStack(alignment: .top, spacing: 14) {
                 poster
@@ -103,30 +103,6 @@ struct MediaDetailView: View {
     private var metaLine: String {
         [item.mediaType.displayName, item.releaseDateText ?? "Release date unknown"]
             .joined(separator: " · ")
-    }
-
-    @ViewBuilder
-    private var backdrop: some View {
-        let url = TMDBService.backdropURL(path: item.backdropPath)
-            ?? TMDBService.posterURL(path: item.posterPath, size: .large)
-
-        AsyncImage(url: url) { image in
-            image.resizable().scaledToFill()
-        } placeholder: {
-            Rectangle().fill(.white.opacity(0.05))
-        }
-        .frame(height: 210)
-        .frame(maxWidth: .infinity)
-        .clipped()
-        .overlay {
-            // Fade the artwork into the page so the poster below it doesn't sit
-            // on a hard edge.
-            LinearGradient(
-                colors: [.clear, .bingeGround.opacity(0.7), .bingeGround],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
     }
 
     private var poster: some View {
@@ -213,14 +189,9 @@ struct MediaDetailView: View {
                 HStack(spacing: 10) {
                     ForEach(providers) { provider in
                         VStack(spacing: 4) {
-                            AsyncImage(url: TMDBService.logoURL(path: provider.logoPath)) { image in
-                                image.resizable().scaledToFit()
-                            } placeholder: {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.white.opacity(0.08))
-                            }
-                            .frame(width: 44, height: 44)
-                            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            providerLogo(path: provider.logoPath)
+                                .frame(width: 44, height: 44)
+                                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
 
                             Text(provider.name)
                                 .font(.system(size: 9))
@@ -232,6 +203,29 @@ struct MediaDetailView: View {
                 }
             }
         }
+    }
+
+    /// A provider logo, loaded through ``RemoteImage`` so a dropped fetch is
+    /// retried and a repeat visit paints from cache — rather than leaving a blank
+    /// tile where a service should be (the Fix 2 weakness, in miniature).
+    @ViewBuilder
+    private func providerLogo(path: String?) -> some View {
+        if let url = TMDBService.logoURL(path: path) {
+            RemoteImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().scaledToFit()
+                case .loading, .failure:
+                    logoPlaceholder
+                }
+            }
+        } else {
+            logoPlaceholder
+        }
+    }
+
+    private var logoPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.08))
     }
 
     // MARK: - Actions
