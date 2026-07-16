@@ -32,8 +32,10 @@ current with `main`.
 | 7 | Preview a search result before adding *(enhancement)* | `a8e5bf3` |
 | 8 | Detail backdrop + logos → RemoteImage *(+ lighter backdrop fade)* | `78d9536` · `8a68bb9` |
 
-Nothing is in flight, and the [Backlog](#backlog) is now empty — every reported bug and
-scoped enhancement is merged.
+Nothing is in flight code-side. One item is **pending on the user**: moving off free
+7-day signing to the paid Apple Developer Program (see [Backlog](#backlog)) — waiting on
+their enrollment to be approved. Otherwise every reported bug and scoped enhancement is
+merged.
 
 ## Done
 
@@ -419,8 +421,24 @@ the real colours of the image show. Same `BackdropImage`, so the search preview 
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
 they're reported, then promoted to **Done** with their branch and commit once merged.
 
-*Empty* — every reported bug and scoped enhancement through 2026-07-15 is merged. New
-items get appended here as they come up.
+- **Persist past the free-signing 7-day expiry — move to the paid Apple Developer Program.**
+  *Chosen 2026-07-15 · blocked on the user's enrollment being approved.* The 7-day limit is
+  Apple's policy for **free personal-team** signing — the development certificate and
+  provisioning profile expire after 7 days. **Not a code setting**; no Info.plist key or build
+  flag changes it. The user picked enrolling in the Apple Developer Program ($99/yr) over the
+  two free alternatives (SideStore/AltStore auto-resign, or a scheduled local rebuild job).
+  **When they come back with their Team ID:**
+  - Today: `CODE_SIGN_STYLE = Automatic`, `DEVELOPMENT_TEAM = 97892S7UQ8` (the free personal
+    team), **4× in `Binge.xcodeproj/project.pbxproj`** (both configs × Binge + BingeTests).
+  - If the paid Team ID is **unchanged** (`97892S7UQ8`): no code change — just rebuild with
+    `-allowProvisioningUpdates` and automatic signing issues a **~1-year** profile instead of
+    the 7-day one. Reinstall to the phone; it now lasts ~a year.
+  - If the Team ID **changed**: set `DEVELOPMENT_TEAM` to the new ID (all 4) on a branch,
+    rebuild, reinstall. Same ~1-year result.
+  - Verify: after reinstall, the provisioning profile's expiry is ~1 year out (not 7 days).
+  - **Optional follow-up, its own item:** **TestFlight** — install/renew straight from the
+    phone, no Mac. Needs an App Store Connect app record + an archive (`xcodebuild archive` →
+    `-exportOptionsPlist app-store` → upload). Bigger than the team switch; do separately.
 
 *Considered and dropped:* a wider **Button Shapes audit** (sweeping `SettingsView` and
 `SearchView` for the same defect Fix 5 fixed). The user explicitly declined it on
