@@ -15,11 +15,12 @@ Bookkeeping (marking an entry below merged) lands as its own commit on `main`, *
 in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 
 ## Status
-*As of 2026-07-15.*
+*As of 2026-07-17.*
 
-**`main` is at `8a68bb9`. Eight items done, all merged, all verified. 50 tests green.**
+**`main` is at `8a68bb9`. Nine items done, all verified. 50 tests green.**
 Feats 6/7 and Fix 8 are verified on the physical iPhone; the build on the phone is
-current with `main`.
+current with `main` and now signed with a **~1-year** provisioning profile (expires
+2027-07-17) after the paid-membership switch — no more weekly re-installs.
 
 | # | Item | Commit |
 |---|------|--------|
@@ -31,11 +32,13 @@ current with `main`.
 | 6 | App icon + launch mark *(enhancement)* | `fee296c` · `16b3fa3` |
 | 7 | Preview a search result before adding *(enhancement)* | `a8e5bf3` |
 | 8 | Detail backdrop + logos → RemoteImage *(+ lighter backdrop fade)* | `78d9536` · `8a68bb9` |
+| 9 | Paid Apple Developer Program → ~1-year signing *(ops, no code)* | docs only |
 
-Nothing is in flight code-side. One item is **pending on the user**: moving off free
-7-day signing to the paid Apple Developer Program (see [Backlog](#backlog)) — waiting on
-their enrollment to be approved. Otherwise every reported bug and scoped enhancement is
-merged.
+Nothing is in flight code-side. The one item that was **pending on the user** — moving
+off free 7-day signing to the paid Apple Developer Program — is now done (see
+[Ops 9](#ops-9--paid-apple-developer-program-device-builds-now-last-1-year-)). Every
+reported bug and scoped enhancement is merged; the backlog holds only an optional
+TestFlight follow-up.
 
 ## Done
 
@@ -417,28 +420,52 @@ the real colours of the image show. Same `BackdropImage`, so the search preview 
 - Verified via the `-detail-scaffold` (a seeded item, ambient `.tint`), before/after on the
   Simulator, then on the physical iPhone. **Reverted before commit.**
 
+### Ops 9 — Paid Apple Developer Program: device builds now last ~1 year ✅
+*Done 2026-07-17 · **no code change** (Team ID unchanged) · bookkeeping is a `docs:` commit
+on `main`*
+
+**Ask.** Get off free personal-team signing so the build on the phone stops dying every
+7 days. Chosen 2026-07-15: enroll in the paid Apple Developer Program ($99/yr) over the free
+alternatives (SideStore/AltStore auto-resign, or a scheduled local rebuild). Blocked until
+the enrollment was approved.
+
+**What happened.** Enrollment approved. The user confirmed the paid **individual** membership
+kept the **same Team ID** (`97892S7UQ8`) — an individual enrolment upgrades the existing
+personal team in place rather than minting a new one. So, exactly as this backlog item
+predicted, **no code change**: the pbxproj already carried `CODE_SIGN_STYLE = Automatic` +
+`DEVELOPMENT_TEAM = 97892S7UQ8` (4× — both configs × Binge + BingeTests), untouched.
+
+The one catch worth remembering: the first `-allowProvisioningUpdates` rebuild **silently
+reused the stale 7-day profile** (created Jul 12, still valid until Jul 19), so it changed
+nothing — automatic signing only regenerates a profile when the cached one is *invalid*.
+Deleting the cached profile from `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`
+and rebuilding forced a fresh reissue: **created 2026-07-17, expires 2026-07-17 → 2027-07-17
+(~1 year)**. Installed **over the top** (Keychain TMDB token + SwiftData library preserved)
+and launched clean on the iPhone 13 Pro.
+
+**Notes worth keeping:**
+- **Same Apple ID → same Team ID.** Individual enrolment upgrades the personal team in place;
+  the free team's `(Personal Team)` name became plain `Surabhi Subramanya`. No
+  `DEVELOPMENT_TEAM` edit was needed, and the *unchanged* branch of the plan was the right one.
+- **A still-valid 7-day profile blocks the upgrade.** `-allowProvisioningUpdates` will not
+  regenerate a profile that hasn't expired yet, so the first rebuild after enrolling reuses
+  the 7-day one and looks like a no-op. **Delete the cached `.mobileprovision` and rebuild** to
+  force the ~1-year reissue.
+- **Verify the expiry, don't assume it.** `security cms -D -i <App>.app/embedded.mobileprovision`
+  then read `:ExpirationDate` — this is what actually proved the paid membership was live and
+  the profile was ~1 year, not 7 days. The stale profile had passed a plain build cleanly.
+- **This recurs ~yearly, not weekly.** Renewal a year from now is the same rebuild + reinstall
+  over the top — still no code. The stale-profile gotcha won't bite then (it'll have expired).
+
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
 they're reported, then promoted to **Done** with their branch and commit once merged.
 
-- **Persist past the free-signing 7-day expiry — move to the paid Apple Developer Program.**
-  *Chosen 2026-07-15 · blocked on the user's enrollment being approved.* The 7-day limit is
-  Apple's policy for **free personal-team** signing — the development certificate and
-  provisioning profile expire after 7 days. **Not a code setting**; no Info.plist key or build
-  flag changes it. The user picked enrolling in the Apple Developer Program ($99/yr) over the
-  two free alternatives (SideStore/AltStore auto-resign, or a scheduled local rebuild job).
-  **When they come back with their Team ID:**
-  - Today: `CODE_SIGN_STYLE = Automatic`, `DEVELOPMENT_TEAM = 97892S7UQ8` (the free personal
-    team), **4× in `Binge.xcodeproj/project.pbxproj`** (both configs × Binge + BingeTests).
-  - If the paid Team ID is **unchanged** (`97892S7UQ8`): no code change — just rebuild with
-    `-allowProvisioningUpdates` and automatic signing issues a **~1-year** profile instead of
-    the 7-day one. Reinstall to the phone; it now lasts ~a year.
-  - If the Team ID **changed**: set `DEVELOPMENT_TEAM` to the new ID (all 4) on a branch,
-    rebuild, reinstall. Same ~1-year result.
-  - Verify: after reinstall, the provisioning profile's expiry is ~1 year out (not 7 days).
-  - **Optional follow-up, its own item:** **TestFlight** — install/renew straight from the
-    phone, no Mac. Needs an App Store Connect app record + an archive (`xcodebuild archive` →
-    `-exportOptionsPlist app-store` → upload). Bigger than the team switch; do separately.
+- **TestFlight — install/renew straight from the phone, no Mac.** *Optional follow-up to
+  [Ops 9](#ops-9--paid-apple-developer-program-device-builds-now-last-1-year-); the paid
+  membership it needs is now in place.* Needs an App Store Connect app record + an archive
+  (`xcodebuild archive` → `-exportOptionsPlist app-store` → upload). Bigger than the team
+  switch was; do it as its own item only if the ~1-year sideloaded build isn't enough.
 
 *Considered and dropped:* a wider **Button Shapes audit** (sweeping `SettingsView` and
 `SearchView` for the same defect Fix 5 fixed). The user explicitly declined it on
