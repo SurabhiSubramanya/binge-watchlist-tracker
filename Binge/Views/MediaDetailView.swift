@@ -356,7 +356,10 @@ struct MediaDetailView: View {
     // MARK: - Mutations
 
     private func setStatus(_ status: WatchStatus) async {
-        item.watchStatus = status
+        // `move` bumps `dateAdded` so the title jumps to the top of the list it's
+        // entering under "Recently added" — a move is an add as far as that sort
+        // is concerned.
+        item.move(to: status)
         try? modelContext.save()
 
         // Marking something watched must cancel its pending reminder — being told

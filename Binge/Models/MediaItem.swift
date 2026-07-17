@@ -78,6 +78,11 @@ final class MediaItem {
     var genres: [String]
 
     var watchStatus: WatchStatus
+
+    /// When this title last *entered its current list* — set on the initial add and
+    /// bumped again whenever it moves between lists (see ``move(to:on:)``). It drives
+    /// the "Recently added" sort, which is per-list, so moving a title to Watched is an
+    /// "add" as far as ordering is concerned. Not shown anywhere; ordering is its only job.
     var dateAdded: Date
 
     /// Snapshot of where this title streams, and for which region it was fetched.
@@ -129,6 +134,19 @@ final class MediaItem {
 // MARK: - Convenience
 
 extension MediaItem {
+    /// Move this title into `status`, treating the move as an "add" for the
+    /// "Recently added" sort — so a title marked Watched lands at the top of the
+    /// Watched list the same way a freshly-added one does, rather than keeping the
+    /// spot it held by its original library-add date.
+    ///
+    /// A no-op move (already in `status`) leaves `dateAdded` untouched, so a stray
+    /// toggle can't reshuffle the grid. `date` is injectable for tests.
+    func move(to status: WatchStatus, on date: Date = .now) {
+        guard watchStatus != status else { return }
+        watchStatus = status
+        dateAdded = date
+    }
+
     /// True when the title comes out on a day after today — drives the "Upcoming"
     /// tag and whether a release reminder is offered.
     ///

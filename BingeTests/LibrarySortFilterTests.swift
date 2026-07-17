@@ -73,6 +73,33 @@ struct LibrarySortFilterTests {
         #expect(sorted.map(\.title) == ["Newer", "Older"])
     }
 
+    @Test("moving a title to Watched bumps it to the top of Recently added")
+    func movingToWatchedBumpsDateAdded() {
+        let now = Date()
+        // A long-standing Want-to-Watch title, moved now, must land above a title
+        // that was already sitting in Watched — the bug was it kept its old spot.
+        let moved = item("Moved", added: now.addingTimeInterval(-10_000), status: .wantToWatch)
+        let alreadyWatched = item("Already watched", added: now.addingTimeInterval(-100), status: .watched)
+
+        moved.move(to: .watched, on: now)
+
+        let watched = [alreadyWatched, moved]
+            .filter { $0.watchStatus == .watched }
+            .sorted(by: LibraryView.SortOption.dateAdded.areInIncreasingOrder)
+        #expect(watched.map(\.title) == ["Moved", "Already watched"])
+    }
+
+    @Test("a no-op status change leaves dateAdded untouched")
+    func noOpMoveKeepsDateAdded() {
+        let original = Date().addingTimeInterval(-5_000)
+        let it = item("Stays", added: original, status: .watched)
+
+        it.move(to: .watched, on: .now)
+
+        // Re-marking a Watched title Watched must not reshuffle the grid.
+        #expect(it.dateAdded == original)
+    }
+
     // MARK: - Filtering
 
     @Test("the type filter keeps only what it says")
