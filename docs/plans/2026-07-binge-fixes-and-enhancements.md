@@ -17,9 +17,9 @@ in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 ## Status
 *As of 2026-07-17.*
 
-**`main` is at `36ecdca`. Ten items done, all verified. 52 tests green.**
-Feats 6/7, Fix 8 and Fix 10 are verified on the physical iPhone; the build on the phone
-is current with `main` and signed with a **~1-year** provisioning profile (expires
+**`main` is at `dd5909a`. Eleven items done, all verified. 52 tests green.**
+Feats 6/7, Fix 8, Fix 10 and Fix 11 are verified on the physical iPhone; the build on the
+phone is current with `main` and signed with a **~1-year** provisioning profile (expires
 2027-07-17) after the paid-membership switch — no more weekly re-installs.
 
 | # | Item | Commit |
@@ -34,6 +34,7 @@ is current with `main` and signed with a **~1-year** provisioning profile (expir
 | 8 | Detail backdrop + logos → RemoteImage *(+ lighter backdrop fade)* | `78d9536` · `8a68bb9` |
 | 9 | Paid Apple Developer Program → ~1-year signing *(ops, no code)* | docs only |
 | 10 | "Recently added" ignored a move between lists | `36ecdca` |
+| 11 | Remove confirmation appeared far from the button | `dd5909a` |
 
 Nothing is in flight code-side. The one item that was **pending on the user** — moving
 off free 7-day signing to the paid Apple Developer Program — is now done (see
@@ -492,6 +493,33 @@ title Watched is a no-op that leaves `dateAdded` alone (a stray toggle can't res
   *calls* `move` — a one-line call visible in the diff.
 - Verified on the physical iPhone: an old Want-to-Watch title, marked Watched, jumped to the
   top of the Watched grid under Recently added. Installed over the top (token + library preserved).
+
+### Fix 11 — Remove-from-Library confirmation appeared far from the button ✅
+*Fixed 2026-07-17 · commit `dd5909a` · branch `fix/11-remove-confirmation-placement` · merged to `main`*
+
+**Symptom.** Tapping "Remove from Library" on the detail screen popped its "Remove …?"
+confirmation up from the **bottom edge** of the screen, well below the row that summoned it —
+often a gap of empty screen between the two. Read as disconnected and not user-friendly.
+
+**Cause.** The confirmation was a `.confirmationDialog`, which on iPhone always renders as an
+**action sheet anchored to the bottom** of the screen — there's no way to pin it near the button
+in a compact size class (popover anchoring is iPad/regular-width only). The Remove row sits
+partway up the scrollable detail content, so the sheet always appeared far below it, and when
+the content was short the gap was large.
+
+**Fix.** Swapped the `.confirmationDialog` for a centred **`.alert`** — a focal modal in the
+middle of the screen, right where attention already is. Same title, same Remove (destructive,
+red) / Cancel buttons. A 7-line diff in one file (`titleVisibility` drops out — an alert always
+shows its title).
+
+**Notes worth keeping:**
+- **Pure presentation — nothing to unit-test.** The 52 tests stayed green; this is verified by
+  eye, not by a new test.
+- Verified with the scaffold trick from Fix 5/8: a temporary `-remove-confirm-scaffold` opened
+  the detail screen straight onto the alert (a second arg, `-open-remove-confirm`, pre-set the
+  private `@State`), reproducing the ambient `.tint(.accentColor)` so Remove renders red and
+  Cancel amber. **Reverted before commit** — the committed diff is just `MediaDetailView.swift`.
+- Then confirmed on the physical iPhone (installed over the top, token + library preserved).
 
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
