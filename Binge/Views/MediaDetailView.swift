@@ -44,10 +44,14 @@ struct MediaDetailView: View {
         // changed since this was added), so re-fetch quietly rather than showing
         // whatever was true the day it was saved.
         .task { await refresh() }
-        .confirmationDialog(
+        // A centred `.alert`, not a `.confirmationDialog`. A confirmation dialog
+        // renders as an action sheet pinned to the *bottom* of the screen, but the
+        // Remove row sits partway up the scroll content — so the prompt appeared far
+        // from the button that summoned it, with a gap of empty screen between them.
+        // An alert is a focal modal in the centre, right where attention already is.
+        .alert(
             "Remove “\(item.title)” from your library?",
-            isPresented: $confirmingRemove,
-            titleVisibility: .visible
+            isPresented: $confirmingRemove
         ) {
             Button("Remove", role: .destructive) { remove() }
             Button("Cancel", role: .cancel) {}
