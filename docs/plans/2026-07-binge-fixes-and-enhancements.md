@@ -17,9 +17,9 @@ in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 ## Status
 *As of 2026-07-17.*
 
-**`main` is at `8a68bb9`. Nine items done, all verified. 50 tests green.**
-Feats 6/7 and Fix 8 are verified on the physical iPhone; the build on the phone is
-current with `main` and now signed with a **~1-year** provisioning profile (expires
+**`main` is at `36ecdca`. Ten items done, all verified. 52 tests green.**
+Feats 6/7, Fix 8 and Fix 10 are verified on the physical iPhone; the build on the phone
+is current with `main` and signed with a **~1-year** provisioning profile (expires
 2027-07-17) after the paid-membership switch — no more weekly re-installs.
 
 | # | Item | Commit |
@@ -33,6 +33,7 @@ current with `main` and now signed with a **~1-year** provisioning profile (expi
 | 7 | Preview a search result before adding *(enhancement)* | `a8e5bf3` |
 | 8 | Detail backdrop + logos → RemoteImage *(+ lighter backdrop fade)* | `78d9536` · `8a68bb9` |
 | 9 | Paid Apple Developer Program → ~1-year signing *(ops, no code)* | docs only |
+| 10 | "Recently added" ignored a move between lists | `36ecdca` |
 
 Nothing is in flight code-side. The one item that was **pending on the user** — moving
 off free 7-day signing to the paid Apple Developer Program — is now done (see
@@ -456,6 +457,41 @@ and launched clean on the iPhone 13 Pro.
   the profile was ~1 year, not 7 days. The stale profile had passed a plain build cleanly.
 - **This recurs ~yearly, not weekly.** Renewal a year from now is the same rebuild + reinstall
   over the top — still no code. The stale-profile gotcha won't bite then (it'll have expired).
+
+### Fix 10 — "Recently added" ignored a title moved between lists ✅
+*Fixed 2026-07-17 · commit `36ecdca` · branch `fix/10-recently-added-on-move` · merged to `main`*
+
+**Symptom.** Marking a title Watched (or moving it back to Want to Watch) didn't lift it to
+the top of the **Recently added** order in the list it entered — it kept the position it held
+by its original add date. Adding a title *directly* to a list worked, which is what made it
+look like a sort bug rather than a data one.
+
+**Cause.** Recently added sorts by `dateAdded` (`LibraryView.SortOption.dateAdded`), and
+`dateAdded` was only ever set at insertion (`.now` by default). `setStatus` flipped
+`watchStatus` but left `dateAdded` untouched, so a moved title sorted by *when it first entered
+the library*, not *when it entered its current list*. A direct add gets a fresh `dateAdded`,
+which is exactly why that path looked fine — same sort, different data.
+
+**Fix.** Treat a move into a list as an "add" for ordering: bump `dateAdded` when the status
+**actually changes**. The mutation was extracted into a pure `MediaItem.move(to:on:)` and
+`setStatus` now calls it. `move` guards on `watchStatus != status`, so re-marking a Watched
+title Watched is a no-op that leaves `dateAdded` alone (a stray toggle can't reshuffle the grid).
+
+**Notes worth keeping:**
+- **Repurposing `dateAdded`, not adding a field — deliberately.** It's used *only* by this sort
+  and is displayed nowhere, so redefining it as "when the title last entered its current list"
+  is invisible everywhere except the one place that was wrong. Crucially this needs **no
+  SwiftData migration** — a new stored property would have meant migrating the real library
+  already on the phone. The property's doc comment now states the meaning so the next reader
+  doesn't mistake it for an immutable library-add timestamp.
+- **Extracted the mutation to test it** — same move as Change 4's `Tally`. `setStatus` is a
+  view method full of `@Environment` and can't be unit-tested without driving the view, but
+  `move(to:on:)` is a pure model method with an injectable `date`. 2 new tests (52 total): a
+  long-standing Want-to-Watch title moved to Watched sorts above one already in Watched, and a
+  no-op move leaves `dateAdded` untouched. The one thing not unit-tested is that `setStatus`
+  *calls* `move` — a one-line call visible in the diff.
+- Verified on the physical iPhone: an old Want-to-Watch title, marked Watched, jumped to the
+  top of the Watched grid under Recently added. Installed over the top (token + library preserved).
 
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
