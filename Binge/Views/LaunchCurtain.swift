@@ -58,23 +58,38 @@ struct LaunchCurtain: View {
         .task { await lift() }
     }
 
-    /// Hold on the launch image for a beat, open the rule out, then get out of the
-    /// way. The whole thing is under a second — a splash that outstays its welcome is
-    /// worse than no splash at all.
+    /// Hold on the launch image, open the rule out, let it rest where the eye can
+    /// catch it, then lift away as a slow cross-fade.
+    ///
+    /// The phases are deliberately **sequential and unhurried**. An earlier version
+    /// ran the whole thing under a second and began the exit fade only 350ms into a
+    /// 550ms spring — so the open flourish and the fade overlapped, the wordmark was
+    /// static-and-readable for barely a quarter-second, and it read as a jolt rather
+    /// than a reveal. Now each phase finishes and settles before the next begins, and
+    /// the mark is on screen ~1.9s: long enough to actually see, still short enough
+    /// not to outstay its welcome.
     private func lift() async {
         guard !reduceMotion else {
-            // No flourish, and barely a pause: someone who has asked the system for
-            // less movement is not asking to be shown a logo for longer.
-            try? await Task.sleep(for: .milliseconds(200))
-            withAnimation(.easeOut(duration: 0.25)) { onFinish() }
+            // No flourish, but long enough to read: someone who asked the system for
+            // less movement still wants to see the wordmark, not have it flash past.
+            try? await Task.sleep(for: .milliseconds(500))
+            withAnimation(.easeInOut(duration: 0.35)) { onFinish() }
             return
         }
 
-        try? await Task.sleep(for: .milliseconds(250))
-        withAnimation(.spring(response: 0.55, dampingFraction: 0.7)) { isLeaving = true }
+        // 1. Hold on the wordmark, perfectly still, long enough to take it in.
+        try? await Task.sleep(for: .milliseconds(650))
 
-        try? await Task.sleep(for: .milliseconds(350))
-        withAnimation(.easeOut(duration: 0.4)) { onFinish() }
+        // 2. Open the rule out — a slower, well-damped spring so it glides rather
+        //    than snaps. The high damping keeps it from overshooting or bouncing.
+        withAnimation(.spring(response: 0.7, dampingFraction: 0.85)) { isLeaving = true }
+
+        // 3. Let the opened rule come fully to rest and be seen before anything
+        //    leaves — this pause is what stops the flourish and the exit colliding.
+        try? await Task.sleep(for: .milliseconds(750))
+
+        // 4. Lift away as a slow, soft cross-fade rather than a quick cut.
+        withAnimation(.easeInOut(duration: 0.6)) { onFinish() }
     }
 }
 
