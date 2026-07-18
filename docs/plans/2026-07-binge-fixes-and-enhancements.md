@@ -17,8 +17,8 @@ in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 ## Status
 *As of 2026-07-17.*
 
-**`main` is at `dd5909a`. Eleven items done, all verified. 52 tests green.**
-Feats 6/7, Fix 8, Fix 10 and Fix 11 are verified on the physical iPhone; the build on the
+**`main` is at `8a1383f`. Twelve items done, all verified. 52 tests green.**
+Feats 6/7, Fix 8, Fix 10, Fix 11 and Fix 12 are verified on the physical iPhone; the build on the
 phone is current with `main` and signed with a **~1-year** provisioning profile (expires
 2027-07-17) after the paid-membership switch — no more weekly re-installs.
 
@@ -35,6 +35,7 @@ phone is current with `main` and signed with a **~1-year** provisioning profile 
 | 9 | Paid Apple Developer Program → ~1-year signing *(ops, no code)* | docs only |
 | 10 | "Recently added" ignored a move between lists | `36ecdca` |
 | 11 | Remove confirmation appeared far from the button | `dd5909a` |
+| 12 | Launch curtain moved too quickly to see | `8a1383f` |
 
 Nothing is in flight code-side. The one item that was **pending on the user** — moving
 off free 7-day signing to the paid Apple Developer Program — is now done (see
@@ -520,6 +521,45 @@ shows its title).
   private `@State`), reproducing the ambient `.tint(.accentColor)` so Remove renders red and
   Cancel amber. **Reverted before commit** — the committed diff is just `MediaDetailView.swift`.
 - Then confirmed on the physical iPhone (installed over the top, token + library preserved).
+
+### Fix 12 — Launch curtain moved too quickly to see ✅
+*Fixed 2026-07-17 · commit `8a1383f` · branch `fix/12-launch-curtain-pacing` · merged to `main`*
+
+**Symptom.** The launch animation — the popcorn-B mark, the "Binge" wordmark, the amber rule —
+flashed past too fast to take in, and the exit felt abrupt rather than a reveal.
+
+**Cause.** Not just speed — two motions **colliding**. The old `lift()` held the mark still for
+only **250ms**, opened the rule with a `spring(response: 0.55)`, then began the exit fade
+**350ms later — while that spring was still settling** (a 400ms `easeOut`). So the whole thing
+was ~1s, the wordmark was static-and-readable for barely a quarter-second, and the fade started
+*mid-flourish*: you never saw the opened state come to rest. That overlap is what read as a jolt.
+
+**Fix.** Make the phases **sequential and unhurried** in `LaunchCurtain.lift()` — each finishes
+and settles before the next begins:
+- a **650ms** still hold (was 250ms), so the mark is legible before anything moves;
+- open the rule with a slower, higher-damped `spring(response: 0.7, dampingFraction: 0.85)` — it
+  glides without the old bounce;
+- a **750ms rest** so the opened rule comes fully to a stop and is *seen* — this pause is what
+  stops the flourish and the exit colliding;
+- lift away as a slow **0.6s `easeInOut`** cross-fade rather than a quick cut.
+
+~1.9s on screen, start to finish (was ~1s). Reduce Motion keeps its no-flourish path but now
+holds **500ms** (was 200ms) so it's readable, then a gentle 0.35s fade.
+
+**Notes worth keeping:**
+- **Geometry untouched.** Only timing and easing changed — the 100×120 mark, 46pt wordmark,
+  44×3 rule and 16pt spacing are all as they were, so the **matched-pair invariant with
+  `LaunchScreen.storyboard`** (Fix 3 / Feat 6) still holds and no storyboard edit was needed.
+  The animated rule width (132) and 1.04 scale are curtain-only and don't exist in the still.
+- **The original "under a second" goal was deliberately overridden.** Fix 3 optimised for "a
+  splash that outstays its welcome is worse than no splash"; the user found the result too fast
+  to see. ~1.9s is the new target — the `lift()` doc comment now records *why* it's slow on
+  purpose so a future reader doesn't "helpfully" speed it back up.
+- **Pure presentation — nothing to unit-test.** The 52 tests stayed green.
+- Verified on the Simulator by capturing a burst of frames across a cold launch (~210ms apart):
+  the mark holds still and legible for a long stretch, the rule glides open without a bounce,
+  rests fully open, then slowly dissolves into the app — no hang. Then confirmed on the physical
+  iPhone (installed over the top, token + library preserved).
 
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
