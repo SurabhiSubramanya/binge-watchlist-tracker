@@ -17,8 +17,8 @@ in the next branch — otherwise Fix N's paperwork ends up in Fix N+1's diff.
 ## Status
 *As of 2026-07-17.*
 
-**`main` is at `8a1383f`. Twelve items done, all verified. 52 tests green.**
-Feats 6/7, Fix 8, Fix 10, Fix 11 and Fix 12 are verified on the physical iPhone; the build on the
+**`main` is at `5839f8c`. Thirteen items done, all verified. 52 tests green.**
+Feats 6/7/13, Fix 8, Fix 10, Fix 11 and Fix 12 are verified on the physical iPhone; the build on the
 phone is current with `main` and signed with a **~1-year** provisioning profile (expires
 2027-07-17) after the paid-membership switch — no more weekly re-installs.
 
@@ -36,6 +36,7 @@ phone is current with `main` and signed with a **~1-year** provisioning profile 
 | 10 | "Recently added" ignored a move between lists | `36ecdca` |
 | 11 | Remove confirmation appeared far from the button | `dd5909a` |
 | 12 | Launch curtain moved too quickly to see | `8a1383f` |
+| 13 | App icon + launch mark refresh *(enhancement)* | `5839f8c` |
 
 Nothing is in flight code-side. The one item that was **pending on the user** — moving
 off free 7-day signing to the paid Apple Developer Program — is now done (see
@@ -560,6 +561,59 @@ holds **500ms** (was 200ms) so it's readable, then a gentle 0.35s fade.
   the mark holds still and legible for a long stretch, the rule glides open without a bounce,
   rests fully open, then slowly dissolves into the app — no hang. Then confirmed on the physical
   iPhone (installed over the top, token + library preserved).
+
+### Feat 13 — App icon + launch mark refreshed from a new render ✅
+*Added 2026-07-17 · commit `5839f8c` · branch `feat/13-app-icon-refresh` · merged to `main`*
+
+**Ask.** Replace the Feat 6 emblem with a richer image the user supplied — the same
+popcorn-B concept, but a glossy, dimensional treatment: a peach→magenta→purple gradient
+**B** built from a film strip with a play button in its bowl, and a detailed striped
+popcorn bucket (loose kernels and all) at its foot, on a near-black rounded tile. "Use
+the logo in this image for the app logo."
+
+**What shipped.**
+- **The icon** (`AppIcon-1024.png`): the icon tile cropped straight out of the supplied
+  render, its rounded corners filled with the tile's *own* dark so it's a clean full-bleed
+  1024×1024 master. Flattened to RGB (`hasAlpha: no`) — iOS masks the corner itself.
+- **The launch mark** (`LaunchMark` @1×/2×/3×): the emblem alone, **transparent**, so the
+  dark launch ground shows through — sprocket holes and the play triangle included, exactly
+  as they read on the icon. Kept at 100×120 / 200×240 / 300×360, so the **matched-pair** with
+  `LaunchScreen.storyboard` + `LaunchCurtain` (Fix 3 / Feat 6) needed **no edits**.
+
+**How it was built (reusable).**
+- **Raster, not SVG.** Feat 6 hand-authored the emblem as SVG; this render's gloss and 3D
+  popcorn would be near-impossible to reproduce by hand, and the whole point was to use *this*
+  artwork — so the source of truth is the user's PNG. All done in Python (PIL + numpy + scipy)
+  in the scratchpad; only the final PNGs are committed.
+- **Full-bleed the tile without white corners.** Cropped tight to the tile's straight edges,
+  then filled everything outside the rounded rect (the 4 white corner arcs + the drop shadow)
+  with a solid sample of the tile's own dark. A first attempt edge-extended by nearest
+  neighbour (`distance_transform_edt`) and left **radial streaks** in the corners — a solid
+  fill is the fix. A *looser* crop with extra dark margin showed a faint inner rounded-rect
+  line on dark (the render's bevel rim doubling iOS's own corner); the **tight crop**, where
+  the tile edge *is* the icon edge, avoids it.
+- **Transparent mark by luminance key.** The emblem is bright/saturated, the tile is dark
+  navy, so alpha = the bright/saturated pixels and transparent = the dark ones (the tile
+  *and* the interior cutouts — which is exactly what you want on the launch ground). Dropped
+  the components touching the border (the white corner arcs), kept the rest (loose kernels
+  included), and **premultiplied the resize** so the downscaled edges don't fringe.
+- **Showed it as an Artifact**, per the Feat 6 rule — masked at real render sizes, on
+  light/dark/wallpaper grounds, before-vs-after, and the in-app captures.
+
+**Notes worth keeping:**
+- **The supplied screenshot's filename carried a narrow no-break space (U+202F)** before
+  "AM", so a literal-path `cp`/`sips` failed with "No such file"; a glob (`…11.19.46*.png`)
+  is the way in, and `cat -v` reveals it as `M-^@`.
+- **`scipy` wasn't installed** — a one-off `pip install scipy` in the session; used for
+  connected-component labelling and the distance transform.
+- **No storyboard/curtain edit was needed, and none should creep in.** Both reference the
+  `LaunchMark` imageset at a fixed 100×120 `scaleAspectFit` frame, so *keeping the PNG
+  dimensions* is what preserves the matched pair. Only the pixels inside changed.
+- **Verified end to end:** `xcodebuild` clean, `sips -g hasAlpha` = no, iPhone 17 sim
+  home-screen mask clean + launch curtain intact (burst-captured), then built and installed
+  **over the top** on the iPhone 13 Pro (token + library preserved) — the user confirmed on
+  the device ("I love it").
+- Assets only, so the 52 tests are untouched — a pure-artwork change has nothing to unit-test.
 
 ## Backlog
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
