@@ -78,6 +78,10 @@ enum TMDBFixtures {
 
     /// `GET /3/tv/87739` — note `name` and `first_air_date` instead of
     /// `title` / `release_date`, and no release date at all.
+    ///
+    /// Also carries **no season fields** (`number_of_seasons`, `status`,
+    /// `next_episode_to_air`) — the case where TMDB sends a sparse TV payload, which
+    /// must decode to all-`nil` season data rather than crash.
     static let tvDetails = Data("""
     {
       "id": 87739,
@@ -90,6 +94,61 @@ enum TMDBFixtures {
         { "id": 10765, "name": "Sci-Fi & Fantasy" }
       ],
       "vote_average": 7.5
+    }
+    """.utf8)
+
+    /// `GET /3/tv/95396` — a **returning** series with a dated next season.
+    /// `status` is TMDB's verbose `"Returning Series"`, and `next_episode_to_air`
+    /// is a *season premiere* (`episode_number: 1`) in the future — the case that
+    /// should light up the Upcoming tag and offer a reminder.
+    static let tvDetailsReturning = Data("""
+    {
+      "id": 95396,
+      "name": "Severance",
+      "overview": "Mark leads a team whose memories are surgically divided between work and personal life.",
+      "poster_path": "/lFf6LLrQjYldcZItzOkGmMMigP7.jpg",
+      "backdrop_path": "/mMTgHFCOgsbZAvenA6bDcgc4Xys.jpg",
+      "first_air_date": "2022-02-18",
+      "last_air_date": "2025-03-21",
+      "number_of_seasons": 2,
+      "number_of_episodes": 19,
+      "status": "Returning Series",
+      "genres": [
+        { "id": 18, "name": "Drama" },
+        { "id": 9648, "name": "Mystery" },
+        { "id": 10765, "name": "Sci-Fi & Fantasy" }
+      ],
+      "next_episode_to_air": {
+        "air_date": "2027-01-16",
+        "season_number": 3,
+        "episode_number": 1,
+        "name": "TBD"
+      },
+      "vote_average": 8.4
+    }
+    """.utf8)
+
+    /// `GET /3/tv/1396` — an **ended** series. `next_episode_to_air` is `null`
+    /// (nothing more is coming), so it must not be Upcoming and must offer no
+    /// reminder; the run span closes at `last_air_date`.
+    static let tvDetailsEnded = Data("""
+    {
+      "id": 1396,
+      "name": "Breaking Bad",
+      "overview": "A chemistry teacher diagnosed with cancer turns to making meth.",
+      "poster_path": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+      "backdrop_path": "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
+      "first_air_date": "2008-01-20",
+      "last_air_date": "2013-09-29",
+      "number_of_seasons": 5,
+      "number_of_episodes": 62,
+      "status": "Ended",
+      "genres": [
+        { "id": 18, "name": "Drama" },
+        { "id": 80, "name": "Crime" }
+      ],
+      "next_episode_to_air": null,
+      "vote_average": 8.9
     }
     """.utf8)
 

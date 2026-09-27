@@ -32,6 +32,67 @@ struct TMDBTitleDetails: Hashable {
     let backdropPath: String?
     let releaseDate: Date?
     let genres: [String]
+
+    /// TV season data — the fields Option A surfaces so a series isn't frozen at
+    /// its premiere. **All `nil` for movies** (there's no such thing as a movie's
+    /// "next season"), mirroring how `releaseDate` already picks its source field
+    /// by media type. `nextReleaseDate` is when the next episode/season airs, which
+    /// is what the Upcoming tag and release reminder key off for TV.
+    let numberOfSeasons: Int?
+    let seriesStatus: SeriesStatus?
+    let lastAirDate: Date?
+    let nextReleaseDate: Date?
+    let nextSeasonNumber: Int?
+}
+
+/// TMDB's series `status` string, mapped to a short display label.
+///
+/// A passthrough `.other` case keeps anything TMDB adds later showing *something*
+/// true rather than being dropped — the meta line would rather print an unfamiliar
+/// status than nothing.
+enum SeriesStatus: Hashable {
+    case returning
+    case inProduction
+    case planned
+    case pilot
+    case ended
+    case canceled
+    case other(String)
+
+    init(tmdb raw: String) {
+        switch raw {
+        case "Returning Series": self = .returning
+        case "In Production": self = .inProduction
+        case "Planned": self = .planned
+        case "Pilot": self = .pilot
+        case "Ended": self = .ended
+        case "Canceled", "Cancelled": self = .canceled
+        default: self = .other(raw)
+        }
+    }
+
+    /// The label the detail meta line shows.
+    var label: String {
+        switch self {
+        case .returning: return "Returning"
+        case .inProduction: return "In Production"
+        case .planned: return "Planned"
+        case .pilot: return "Pilot"
+        case .ended: return "Ended"
+        case .canceled: return "Canceled"
+        case .other(let raw): return raw
+        }
+    }
+
+    /// True when the series has finished for good — no more seasons coming. Lets the
+    /// meta-line composer show a closed run span ("2008–2013") rather than an
+    /// open-ended premiere year.
+    var isConcluded: Bool {
+        switch self {
+        case .ended, .canceled: return true
+        default: return false
+        }
+    }
 }
 
 // MARK: - Wire format
@@ -64,6 +125,10 @@ struct TMDBSearchRow: Decodable {
 }
 
 /// `movie/{id}` and `tv/{id}` — same shape modulo the title/date field names.
+///
+/// The season fields (`numberOfSeasons` … `nextEpisodeToAir`) only appear on the
+/// `tv/{id}` payload; every one is optional so a movie payload — which carries none
+/// of them — decodes cleanly, and so does a TV row TMDB happens to send incomplete.
 struct TMDBDetailsResponse: Decodable {
     let id: Int
     let title: String?
@@ -75,9 +140,22 @@ struct TMDBDetailsResponse: Decodable {
     let firstAirDate: String?
     let genres: [Genre]?
 
+    let numberOfSeasons: Int?
+    let status: String?
+    let lastAirDate: String?
+    let nextEpisodeToAir: Episode?
+
     struct Genre: Decodable {
         let id: Int
         let name: String
+    }
+
+    /// `next_episode_to_air` (and its `last_episode_to_air` twin). TMDB sends `null`
+    /// here once a series ends, which is exactly the signal that nothing new is coming.
+    struct Episode: Decodable {
+        let airDate: String?
+        let seasonNumber: Int?
+        let episodeNumber: Int?
     }
 }
 
@@ -137,6 +215,11 @@ extension TMDBDetailsResponse {
         let resolvedTitle = (mediaType == .movie ? title : name)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
+        // Only a series has seasons. Guarding on the media type (rather than trusting
+        // the fields to be absent) keeps a stray `status` on a movie payload from
+        // leaking TV semantics into a film.
+        let isTV = mediaType == .tv
+
         return TMDBTitleDetails(
             tmdbId: id,
             mediaType: mediaType,
@@ -145,7 +228,12 @@ extension TMDBDetailsResponse {
             posterPath: posterPath.nonEmpty,
             backdropPath: backdropPath.nonEmpty,
             releaseDate: ReleaseDate.parse(mediaType == .movie ? releaseDate : firstAirDate),
-            genres: (genres ?? []).map(\.name)
+            genres: (genres ?? []).map(\.name),
+            numberOfSeasons: isTV ? numberOfSeasons : nil,
+            seriesStatus: isTV ? status.flatMap { $0.isEmpty ? nil : SeriesStatus(tmdb: $0) } : nil,
+            lastAirDate: isTV ? ReleaseDate.parse(lastAirDate) : nil,
+            nextReleaseDate: isTV ? ReleaseDate.parse(nextEpisodeToAir?.airDate) : nil,
+            nextSeasonNumber: isTV ? nextEpisodeToAir?.seasonNumber : nil
         )
     }
 }

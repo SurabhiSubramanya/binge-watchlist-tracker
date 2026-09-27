@@ -66,9 +66,17 @@ struct TMDBDecodingTests {
         #expect(details.title == "Dune: Part Two")
         #expect(details.genres == ["Science Fiction", "Adventure"])
         #expect(details.releaseDate == expectedDate(2024, 2, 27))
+
+        // A film has no seasons — every season field must be nil regardless of what
+        // a movie payload happens to carry.
+        #expect(details.numberOfSeasons == nil)
+        #expect(details.seriesStatus == nil)
+        #expect(details.lastAirDate == nil)
+        #expect(details.nextReleaseDate == nil)
+        #expect(details.nextSeasonNumber == nil)
     }
 
-    @Test("tv details use name, and an empty air date is nil not a crash")
+    @Test("tv details use name, an empty air date is nil, and absent season data is nil")
     func tvDetails() throws {
         let response = try Self.decode(TMDBDetailsResponse.self, from: TMDBFixtures.tvDetails)
         let details = response.normalized(mediaType: .tv)
@@ -77,6 +85,57 @@ struct TMDBDecodingTests {
         #expect(details.genres == ["Sci-Fi & Fantasy"])
         #expect(details.releaseDate == nil)
         #expect(details.backdropPath == nil)
+
+        // A sparse TV payload (no season fields at all) decodes to all-nil, not a crash.
+        #expect(details.numberOfSeasons == nil)
+        #expect(details.seriesStatus == nil)
+        #expect(details.lastAirDate == nil)
+        #expect(details.nextReleaseDate == nil)
+        #expect(details.nextSeasonNumber == nil)
+    }
+
+    @Test("a returning series decodes its seasons, status, and dated next season")
+    func tvDetailsReturning() throws {
+        let response = try Self.decode(TMDBDetailsResponse.self, from: TMDBFixtures.tvDetailsReturning)
+        let details = response.normalized(mediaType: .tv)
+
+        #expect(details.title == "Severance")
+        #expect(details.releaseDate == expectedDate(2022, 2, 18))
+        #expect(details.numberOfSeasons == 2)
+        #expect(details.seriesStatus == .returning, "\"Returning Series\" maps to .returning")
+        #expect(details.lastAirDate == expectedDate(2025, 3, 21))
+        // The next-season signal that drives the Upcoming tag + reminder.
+        #expect(details.nextReleaseDate == expectedDate(2027, 1, 16))
+        #expect(details.nextSeasonNumber == 3)
+    }
+
+    @Test("an ended series has no next season and closes its run at last_air_date")
+    func tvDetailsEnded() throws {
+        let response = try Self.decode(TMDBDetailsResponse.self, from: TMDBFixtures.tvDetailsEnded)
+        let details = response.normalized(mediaType: .tv)
+
+        #expect(details.title == "Breaking Bad")
+        #expect(details.numberOfSeasons == 5)
+        #expect(details.seriesStatus == .ended)
+        #expect(details.lastAirDate == expectedDate(2013, 9, 29))
+        // next_episode_to_air was null — nothing more is coming.
+        #expect(details.nextReleaseDate == nil)
+        #expect(details.nextSeasonNumber == nil)
+    }
+
+    @Test("series status maps TMDB's verbose strings and passes unknowns through")
+    func seriesStatusMapping() {
+        #expect(SeriesStatus(tmdb: "Returning Series") == .returning)
+        #expect(SeriesStatus(tmdb: "Ended") == .ended)
+        #expect(SeriesStatus(tmdb: "Canceled") == .canceled)
+        #expect(SeriesStatus(tmdb: "Cancelled") == .canceled, "both spellings collapse")
+        #expect(SeriesStatus(tmdb: "In Production") == .inProduction)
+        // Anything TMDB adds later survives as its own label rather than being lost.
+        #expect(SeriesStatus(tmdb: "Rumored") == .other("Rumored"))
+        #expect(SeriesStatus(tmdb: "Rumored").label == "Rumored")
+        #expect(SeriesStatus.ended.isConcluded)
+        #expect(SeriesStatus.canceled.isConcluded)
+        #expect(!SeriesStatus.returning.isConcluded)
     }
 
     // MARK: - watch/providers
