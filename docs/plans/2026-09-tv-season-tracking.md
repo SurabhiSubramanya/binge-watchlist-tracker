@@ -71,7 +71,9 @@ compiled and tested before review, fast-forward merged on approval — same rhyt
 enhancements plan. Bookkeeping (marking a subtask done here) is its own `docs:` commit on
 `main`, not folded into the next branch.
 
-### 1. Decode the TV season fields (wire → normalized)
+### 1. Decode the TV season fields (wire → normalized) ✅
+*Done 2026-09-27 · commit `a2da056` · branch `feature/season-1-tmdb-decode` · merged to `main`. Added `SeriesStatus` + the five normalized fields; TV-only, nil for movies. 55 tests green (was 52) — returning/ended fixtures, status mapping, nil-season assertions on the movie & sparse-TV paths.*
+
 `Services/TMDBModels.swift`: extend `TMDBDetailsResponse` with `numberOfSeasons: Int?`,
 `status: String?`, `lastAirDate: String?`, and a nested `nextEpisodeToAir` (`airDate`,
 `seasonNumber`, `episodeNumber`, all optional — TMDB sends `null` for ended shows). Add a
