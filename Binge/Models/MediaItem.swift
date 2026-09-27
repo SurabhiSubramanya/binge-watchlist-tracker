@@ -227,6 +227,68 @@ extension MediaItem {
         return ReleaseDate.formatted(releaseDate)
     }
 
+    // MARK: - Detail meta line (Option A)
+
+    /// The series status rebuilt from its stored label, for logic that needs the
+    /// case rather than the display string (whether the run has concluded).
+    var seriesStatusValue: SeriesStatus? {
+        seriesStatus.map(SeriesStatus.init(label:))
+    }
+
+    /// The run timeline for the meta line: a closed span for a concluded series
+    /// ("2008–2013", or a single year if it began and ended the same one),
+    /// otherwise the premiere year ("2016") — the status word and the "Next" line
+    /// carry the "still going" meaning, so an ongoing show isn't dressed up with a
+    /// misleading end year. `nil` when no year is known at all.
+    var runSpanText: String? {
+        let premiereYear = releaseDate.map { ReleaseDate.year(of: $0) }
+        let lastYear = lastAirDate.map { ReleaseDate.year(of: $0) }
+
+        if seriesStatusValue?.isConcluded == true, let lastYear {
+            guard let premiereYear, premiereYear != lastYear else { return "\(premiereYear ?? lastYear)" }
+            return "\(premiereYear)–\(lastYear)"
+        }
+        return premiereYear.map(String.init)
+    }
+
+    /// "5 seasons" / "1 season", or `nil` when unknown. Pluralised by hand: the
+    /// count sits inside one styled string, so SwiftUI's automatic grammar
+    /// agreement can't reach it — the "1 MOVIES" trap from the watched-counts work.
+    var seasonCountText: String? {
+        guard let numberOfSeasons, numberOfSeasons > 0 else { return nil }
+        return "\(numberOfSeasons) season\(numberOfSeasons == 1 ? "" : "s")"
+    }
+
+    /// "Next: Season 3, Jan 16, 2027" when a next episode/season is dated in the
+    /// future; `nil` for an ended show, an undated next, or a date already past.
+    /// A comma (not " · ") joins the season and date so it reads as one unit
+    /// distinct from the meta line's own " · " separators.
+    var nextReleaseText: String? {
+        guard let nextReleaseDate, ReleaseDate.isUpcoming(nextReleaseDate) else { return nil }
+        let date = ReleaseDate.formatted(nextReleaseDate, style: .medium)
+        if let nextSeasonNumber {
+            return "Next: Season \(nextSeasonNumber), \(date)"
+        }
+        return "Next: \(date)"
+    }
+
+    /// The subtitle under the title on the detail screen.
+    ///
+    /// A movie keeps the old "Movie · <date>" line. A series composes the season
+    /// data Option A surfaces — run span · season count · status · next season —
+    /// dropping any component TMDB doesn't have. A series with *no* season data or
+    /// dates falls back to the movie-style line so it never reads as a bare "TV".
+    var detailMetaLine: String {
+        let unknownDateLine = [mediaType.displayName, releaseDateText ?? "Release date unknown"]
+            .joined(separator: " · ")
+
+        guard mediaType == .tv else { return unknownDateLine }
+
+        let parts = [runSpanText, seasonCountText, seriesStatus, nextReleaseText].compactMap { $0 }
+        guard !parts.isEmpty else { return unknownDateLine }
+        return ([mediaType.displayName] + parts).joined(separator: " · ")
+    }
+
     /// Providers grouped for display: what's included with a subscription vs.
     /// what must be rented/bought.
     var streamingOffers: [StreamingProvider] {

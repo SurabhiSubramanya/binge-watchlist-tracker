@@ -102,11 +102,11 @@ struct MediaDetailView: View {
         }
     }
 
-    /// The release date, spelled out — always the day TMDB published, whatever
-    /// time zone the phone is in (see `ReleaseDate`).
+    /// Type · when it's out. A movie shows its release date; a series shows the
+    /// season data Option A surfaces (run span · seasons · status · next season).
+    /// See ``MediaItem/detailMetaLine`` — the composition is pure and unit-tested.
     private var metaLine: String {
-        [item.mediaType.displayName, item.releaseDateText ?? "Release date unknown"]
-            .joined(separator: " · ")
+        item.detailMetaLine
     }
 
     private var poster: some View {

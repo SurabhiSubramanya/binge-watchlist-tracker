@@ -71,6 +71,21 @@ enum SeriesStatus: Hashable {
         }
     }
 
+    /// Rebuild from a stored ``label`` — the inverse of `label`, so a status that
+    /// round-trips through `MediaItem.seriesStatus` (which persists the label) comes
+    /// back as the same case, giving logic like ``isConcluded`` back.
+    init(label: String) {
+        switch label {
+        case "Returning": self = .returning
+        case "In Production": self = .inProduction
+        case "Planned": self = .planned
+        case "Pilot": self = .pilot
+        case "Ended": self = .ended
+        case "Canceled": self = .canceled
+        default: self = .other(label)
+        }
+    }
+
     /// The label the detail meta line shows.
     var label: String {
         switch self {
