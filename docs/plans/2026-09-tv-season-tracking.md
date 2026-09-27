@@ -112,7 +112,9 @@ cases.
   library on the phone. High cost of getting wrong.
 - **Depends on:** 1
 
-### 3. Populate the new fields on add and refresh
+### 3. Populate the new fields on add and refresh ✅
+*Done 2026-09-27 · commit `2c183e3` · branch `feature/season-3-write-paths` · merged to `main`. Shared `MediaItem.applySeasonData(from:)` called by `enrich` (add) and `refresh` (open); refresh's reminder resync now compares `effectiveReleaseDate` before/after. 64 tests green (was 61) — decode→normalize→apply chain for returning/ended/movie.*
+
 `Views/SearchView.swift` (`enrich`) and `Views/MediaDetailView.swift` (`refresh`): copy
 the new normalized fields from `TMDBTitleDetails` onto the `MediaItem`, alongside the
 genres/overview mapping that's already there. **Reminder resync:** `refresh` currently
