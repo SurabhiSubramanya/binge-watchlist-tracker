@@ -37,7 +37,10 @@ enum ReleaseReminder {
         guard item.watchStatus == .wantToWatch else { return nil }
 
         // No date, no reminder. TMDB genuinely doesn't know for a lot of titles.
-        guard let releaseDate = item.releaseDate else { return nil }
+        // For a series this is the *next* season/episode date, not the premiere —
+        // that's the whole point of `effectiveReleaseDate`, so a reminder tracks the
+        // next season rather than a premiere that's already long past.
+        guard let releaseDate = item.effectiveReleaseDate else { return nil }
 
         // Read the published day in UTC — release dates are floating calendar
         // dates pinned to midnight UTC (see `ReleaseDate`). Reading it with the

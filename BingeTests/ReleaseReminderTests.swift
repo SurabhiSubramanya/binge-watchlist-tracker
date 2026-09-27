@@ -12,13 +12,15 @@ struct ReleaseReminderTests {
     private func item(
         release: String?,
         status: WatchStatus = .wantToWatch,
-        type: MediaType = .movie
+        type: MediaType = .movie,
+        next: String? = nil
     ) -> MediaItem {
         MediaItem(
             tmdbId: 693134,
             mediaType: type,
             title: "Dune: Part Two",
             releaseDate: ReleaseDate.parse(release),
+            nextReleaseDate: ReleaseDate.parse(next),
             watchStatus: status
         )
     }
@@ -185,5 +187,79 @@ struct ReleaseReminderTests {
             #expect(ReleaseReminder.isEligible(item, now: now) == expected)
             #expect((ReleaseReminder.fireComponents(for: item, now: now) != nil) == expected)
         }
+    }
+
+    // MARK: - TV: the reminder follows the next season, not the premiere
+
+    /// The whole point of Option A. A show that premiered years ago used to be
+    /// permanently ineligible (its `first_air_date` is in the past); now a dated
+    /// next season makes it reminder-eligible, and the reminder fires on *that* day.
+    @Test("a returning show with a dated next season reminds on the new season, not the premiere")
+    func tvRemindsOnNextSeason() throws {
+        let show = item(release: "2022-02-18", type: .tv, next: "2030-03-01")
+        let now = instant("UTC", 2030, 1, 1, 12)
+
+        let components = try #require(ReleaseReminder.fireComponents(for: show, now: now))
+        // 2030-03-01 (the next season), *not* 2022-02-18 (the premiere).
+        #expect(components.year == 2030)
+        #expect(components.month == 3)
+        #expect(components.day == 1)
+        #expect(components.hour == 9)
+    }
+
+    @Test("an ended show — no next season, premiere long past — gets no reminder")
+    func tvEndedIsIneligible() {
+        // nextReleaseDate nil, premiere in the past → effective date is the past
+        // premiere → not eligible. The old code would also have refused this, but
+        // only because it read the premiere directly; this proves the fallback path.
+        let ended = item(release: "2008-01-20", type: .tv, next: nil)
+        #expect(ReleaseReminder.fireComponents(for: ended, now: instant("UTC", 2030, 1, 1, 12)) == nil)
+    }
+
+    @Test("a not-yet-premiered show with no dated next episode still reminds on its premiere")
+    func tvUnpremieredFallsBackToPremiere() throws {
+        // TMDB sometimes has a future premiere but no next_episode_to_air yet. The
+        // `nextReleaseDate ?? releaseDate` fallback keeps that show remindable.
+        let upcoming = item(release: "2030-03-01", type: .tv, next: nil)
+        let components = try #require(
+            ReleaseReminder.fireComponents(for: upcoming, now: instant("UTC", 2030, 1, 1, 12))
+        )
+        #expect(components.month == 3)
+        #expect(components.day == 1)
+    }
+
+    @Test("a movie ignores any next-episode date — its effective date is its release")
+    func movieIgnoresNextDate() throws {
+        // A movie should never carry nextReleaseDate, but if one leaked in it must
+        // not move the reminder: the media-type switch pins a film to its release.
+        let movie = item(release: "2030-03-01", type: .movie, next: "2035-01-01")
+        let components = try #require(
+            ReleaseReminder.fireComponents(for: movie, now: instant("UTC", 2030, 1, 1, 12))
+        )
+        #expect(components.year == 2030, "the 2035 next-date must be ignored for a movie")
+        #expect(components.month == 3)
+    }
+
+    // MARK: - effectiveReleaseDate / isUpcoming (the mechanism underneath)
+
+    @Test("effectiveReleaseDate is the release for a movie and the next season for TV")
+    func effectiveDateByMediaType() {
+        #expect(item(release: "2024-02-27", type: .movie).effectiveReleaseDate
+                == ReleaseDate.parse("2024-02-27"))
+        // TV with a dated next season → the next season.
+        #expect(item(release: "2016-07-15", type: .tv, next: "2030-03-01").effectiveReleaseDate
+                == ReleaseDate.parse("2030-03-01"))
+        // TV with no next season → falls back to the premiere.
+        #expect(item(release: "2016-07-15", type: .tv, next: nil).effectiveReleaseDate
+                == ReleaseDate.parse("2016-07-15"))
+    }
+
+    @Test("a long-aired show is Upcoming again once a future season is dated")
+    func tvUpcomingTracksNextSeason() {
+        // Premiere in the past, next season in the future → Upcoming. This is the
+        // library badge and the detail "Upcoming" tag lighting up for a new season.
+        #expect(item(release: "2016-07-15", type: .tv, next: "2999-01-01").isUpcoming)
+        // Ended (no next, past premiere) → not Upcoming.
+        #expect(!item(release: "2016-07-15", type: .tv, next: nil).isUpcoming)
     }
 }

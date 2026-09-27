@@ -77,6 +77,20 @@ final class MediaItem {
     var releaseDate: Date?
     var genres: [String]
 
+    /// TV season data, snapshotted from TMDB on add/refresh (Option A). **All `nil`
+    /// for movies.** `nextReleaseDate` is when the next episode/season airs — the
+    /// date a series' Upcoming tag and release reminder key off, via
+    /// ``effectiveReleaseDate``. `seriesStatus` stores the display label
+    /// (`SeriesStatus.label`, e.g. "Returning" / "Ended"), not TMDB's raw string.
+    ///
+    /// All optional so adding them to the model is a *lightweight* SwiftData
+    /// migration — the library already on the phone migrates with no mapping model.
+    var numberOfSeasons: Int?
+    var seriesStatus: String?
+    var lastAirDate: Date?
+    var nextReleaseDate: Date?
+    var nextSeasonNumber: Int?
+
     var watchStatus: WatchStatus
 
     /// When this title last *entered its current list* — set on the initial add and
@@ -102,6 +116,11 @@ final class MediaItem {
         backdropPath: String? = nil,
         releaseDate: Date? = nil,
         genres: [String] = [],
+        numberOfSeasons: Int? = nil,
+        seriesStatus: String? = nil,
+        lastAirDate: Date? = nil,
+        nextReleaseDate: Date? = nil,
+        nextSeasonNumber: Int? = nil,
         watchStatus: WatchStatus = .wantToWatch,
         dateAdded: Date = .now,
         streamingProviders: [StreamingProvider] = [],
@@ -118,6 +137,11 @@ final class MediaItem {
         self.backdropPath = backdropPath
         self.releaseDate = releaseDate
         self.genres = genres
+        self.numberOfSeasons = numberOfSeasons
+        self.seriesStatus = seriesStatus
+        self.lastAirDate = lastAirDate
+        self.nextReleaseDate = nextReleaseDate
+        self.nextSeasonNumber = nextSeasonNumber
         self.watchStatus = watchStatus
         self.dateAdded = dateAdded
         self.streamingProviders = streamingProviders
@@ -147,14 +171,32 @@ extension MediaItem {
         dateAdded = date
     }
 
-    /// True when the title comes out on a day after today — drives the "Upcoming"
-    /// tag and whether a release reminder is offered.
+    /// The date the "Upcoming" tag and the release reminder key off — the one place
+    /// the movie/TV difference lives, so everything downstream stays media-agnostic.
+    ///
+    /// - **Movie:** its release date, unchanged.
+    /// - **TV:** when the *next* episode/season airs (`nextReleaseDate`) if TMDB has
+    ///   dated one, otherwise the premiere. That single fallback makes every case
+    ///   fall out right: an ended show (`nextReleaseDate` nil, premiere in the past)
+    ///   is correctly *not* upcoming and offers no reminder; a returning show with a
+    ///   dated next season becomes upcoming and reminder-eligible; a not-yet-premiered
+    ///   show still works off its premiere.
+    var effectiveReleaseDate: Date? {
+        switch mediaType {
+        case .movie: return releaseDate
+        case .tv: return nextReleaseDate ?? releaseDate
+        }
+    }
+
+    /// True when the title's next release is on a day after today — drives the
+    /// "Upcoming" tag and whether a release reminder is offered. For a series that's
+    /// the next season/episode (see ``effectiveReleaseDate``), not the premiere.
     ///
     /// Goes through ``ReleaseDate`` rather than comparing to `.now`: release dates
     /// are floating calendar dates, so this has to be a day-to-day comparison.
     var isUpcoming: Bool {
-        guard let releaseDate else { return false }
-        return ReleaseDate.isUpcoming(releaseDate)
+        guard let effectiveReleaseDate else { return false }
+        return ReleaseDate.isUpcoming(effectiveReleaseDate)
     }
 
     /// Four-digit release year for compact metadata lines, if known.
