@@ -129,7 +129,9 @@ set). No new unit test unless the resync check is extractable cheaply.
   needs a correct before/after capture, so not rote.
 - **Depends on:** 2
 
-### 4. Compose the richer detail meta line
+### 4. Compose the richer detail meta line ✅
+*Done 2026-09-27 · commit `144b67e` · branch `feature/season-4-detail-metaline` · merged to `main`. `runSpanText` / `seasonCountText` / `nextReleaseText` / `detailMetaLine` on MediaItem + `SeriesStatus(label:)`; movies keep the old line. 72 tests green (was 64). Verified live via a temporary detail scaffold (reverted): returning show shows the full line + Upcoming tag + reminder toggle; ended show shows the closed span and no reminder — both wrap cleanly.*
+
 Add pure, testable display computeds to `MediaItem` (e.g. `runSpanText`,
 `seasonCountText`, `seriesStatusLabel`, `nextReleaseText`) and a `detailMetaLine` that
 assembles them for TV, joined by ` · `; movies keep `type · release date`. Point
