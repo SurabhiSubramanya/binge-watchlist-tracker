@@ -90,7 +90,9 @@ with a dated `next_episode_to_air`, and an **ended** show with `next_episode_to_
 - **Model:** Sonnet 5 — follows the established DTO + `normalized()` pattern closely; the only real care is the optional nesting and the status mapping.
 - **Depends on:** none
 
-### 2. Persist the fields + effective-date / upcoming / reminder logic
+### 2. Persist the fields + effective-date / upcoming / reminder logic ✅
+*Done 2026-09-27 · commit `cb16ca7` · branch `feature/season-2-model-reminder` · merged to `main`. Five optional stored fields, `effectiveReleaseDate` (movie: release; TV: `nextReleaseDate ?? releaseDate`), and `isUpcoming` + `ReleaseReminder` both route through it. 61 tests green (was 55); new schema boots on the simulator without a container crash (definitive on-device migration check happens on install-over-the-top).*
+
 `Models/MediaItem.swift`: add stored `numberOfSeasons: Int?`, `seriesStatus: String?`,
 `lastAirDate: Date?`, `nextReleaseDate: Date?`, `nextSeasonNumber: Int?` — **all optional
 with `nil` defaults in `init`** (migration-safe). Add a computed `effectiveReleaseDate`
