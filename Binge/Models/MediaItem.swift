@@ -171,6 +171,21 @@ extension MediaItem {
         dateAdded = date
     }
 
+    /// Copy the TV season snapshot from a freshly fetched details record. Shared by
+    /// the two places that fetch details — `SearchView.enrich` on add and
+    /// `MediaDetailView.refresh` on open — so the mapping can't drift between them.
+    ///
+    /// A no-op in effect for movies: `TMDBTitleDetails` leaves every season field nil
+    /// for a film, so this just writes nils back. `seriesStatus` is stored as the
+    /// display label (`SeriesStatus.label`), which is all the UI needs.
+    func applySeasonData(from details: TMDBTitleDetails) {
+        numberOfSeasons = details.numberOfSeasons
+        seriesStatus = details.seriesStatus?.label
+        lastAirDate = details.lastAirDate
+        nextReleaseDate = details.nextReleaseDate
+        nextSeasonNumber = details.nextSeasonNumber
+    }
+
     /// The date the "Upcoming" tag and the release reminder key off — the one place
     /// the movie/TV difference lives, so everything downstream stays media-agnostic.
     ///

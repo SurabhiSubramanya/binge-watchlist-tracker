@@ -207,6 +207,11 @@ struct SearchView: View {
             if !details.overview.isEmpty {
                 item.overview = details.overview
             }
+            // search/multi carries no season data, so this is the first chance to
+            // populate it — the detail screen's meta line and the reminder depend on
+            // it. No reminder sync here: reminders are opt-in via the toggle, and the
+            // detail screen re-fetches on open anyway.
+            item.applySeasonData(from: details)
         }
 
         if let providers = try? await service.watchProviders(

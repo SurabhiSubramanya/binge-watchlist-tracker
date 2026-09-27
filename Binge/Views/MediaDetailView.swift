@@ -398,7 +398,9 @@ struct MediaDetailView: View {
         let region = settings.region
 
         if let details = try? await service.details(for: item.tmdbId, mediaType: item.mediaType) {
-            let previousDate = item.releaseDate
+            // Capture the date the reminder keys off *before* the update — for TV
+            // that's the next season, not the premiere (see `effectiveReleaseDate`).
+            let previousEffectiveDate = item.effectiveReleaseDate
 
             item.title = details.title.isEmpty ? item.title : details.title
             item.overview = details.overview.isEmpty ? item.overview : details.overview
@@ -406,10 +408,13 @@ struct MediaDetailView: View {
             item.backdropPath = details.backdropPath ?? item.backdropPath
             item.genres = details.genres
             item.releaseDate = details.releaseDate
+            item.applySeasonData(from: details)
 
-            // TMDB revises release dates all the time. A reminder pinned to the
-            // old date would fire on the wrong day, so follow the change.
-            if previousDate != details.releaseDate {
+            // TMDB revises dates all the time — and a next season getting *newly
+            // dated* is exactly the case that must (re)arm a reminder. Re-sync when
+            // the effective date moved, so a reminder can never be left pointing at a
+            // stale premiere or a superseded season date.
+            if previousEffectiveDate != item.effectiveReleaseDate {
                 await NotificationManager.shared.sync(item)
             }
         }
