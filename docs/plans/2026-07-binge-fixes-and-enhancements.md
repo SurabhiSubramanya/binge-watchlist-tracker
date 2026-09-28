@@ -627,11 +627,12 @@ they're reported, then promoted to **Done** with their branch and commit once me
   premiere. Five subtasks merged (`112415f`), 73 tests green. **On-device migration
   verified** (installed over the top on the iPhone 13 Pro: 33 titles intact, five new
   columns added, token preserved). Feature done — see that plan for details.
-- **TestFlight — install/renew straight from the phone, no Mac.** *Optional follow-up to
-  [Ops 9](#ops-9--paid-apple-developer-program-device-builds-now-last-1-year-); the paid
-  membership it needs is now in place.* Needs an App Store Connect app record + an archive
-  (`xcodebuild archive` → `-exportOptionsPlist app-store` → upload). Bigger than the team
-  switch was; do it as its own item only if the ~1-year sideloaded build isn't enough.
+- **App delivery (get it onto other people's phones)** — Ad Hoc vs TestFlight vs public
+  App Store, with the token-rework and refresh trade-offs worked out in its own plan:
+  [`2026-09-app-delivery.md`](2026-09-app-delivery.md). Supersedes the old bare
+  "TestFlight" item. Decision pending (audience + whether any recipient is
+  non-technical); paid membership already in place from
+  [Ops 9](#ops-9--paid-apple-developer-program-device-builds-now-last-1-year-).
 
 *Considered and dropped:* a wider **Button Shapes audit** (sweeping `SettingsView` and
 `SearchView` for the same defect Fix 5 fixed). The user explicitly declined it on
