@@ -69,13 +69,35 @@ enum SampleLibrary {
                 releaseDate: ReleaseDate.parse("2023-07-19"),
                 watchStatus: .watched
             ),
+            // A returning series with a dated next season — the grid shows the
+            // "Upcoming" badge (isUpcoming now tracks the next season), and the
+            // detail meta line reads "TV · 2022 · 2 seasons · Returning · Next: …".
             MediaItem(
                 tmdbId: 95396,
                 mediaType: .tv,
                 title: "Severance",
                 overview: "Mark leads a team whose memories have been surgically divided.",
                 posterPath: "/lFf6LLrQjYldcZItzOkGmMMigP7.jpg",
-                releaseDate: ReleaseDate.parse("2022-02-17"),
+                releaseDate: ReleaseDate.parse("2022-02-18"),
+                numberOfSeasons: 2,
+                seriesStatus: "Returning",
+                lastAirDate: ReleaseDate.parse("2025-03-21"),
+                nextReleaseDate: ReleaseDate.parse("2027-01-16"),
+                nextSeasonNumber: 3,
+                watchStatus: .wantToWatch
+            ),
+            // A concluded series — the grid caption shows the run span "2008–2013"
+            // rather than a lone premiere year.
+            MediaItem(
+                tmdbId: 1396,
+                mediaType: .tv,
+                title: "Breaking Bad",
+                overview: "A chemistry teacher diagnosed with cancer turns to making meth.",
+                posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+                releaseDate: ReleaseDate.parse("2008-01-20"),
+                numberOfSeasons: 5,
+                seriesStatus: "Ended",
+                lastAirDate: ReleaseDate.parse("2013-09-29"),
                 watchStatus: .watched
             )
         ]

@@ -289,6 +289,18 @@ extension MediaItem {
         return ([mediaType.displayName] + parts).joined(separator: " · ")
     }
 
+    /// The single line shown under a poster in the Library grid. A movie shows its
+    /// release year; a series shows its run span ("2008–2013" once concluded,
+    /// otherwise the premiere year) — so the grid conveys *which era* of a show is
+    /// on the shelf, not just when it started. One line either way, so the two-line
+    /// caption height (and the grid alignment that depends on it) is unchanged.
+    var gridYearText: String? {
+        switch mediaType {
+        case .movie: return releaseYear
+        case .tv: return runSpanText
+        }
+    }
+
     /// Providers grouped for display: what's included with a subscription vs.
     /// what must be rented/bought.
     var streamingOffers: [StreamingProvider] {

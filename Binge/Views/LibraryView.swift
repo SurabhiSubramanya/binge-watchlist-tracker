@@ -64,7 +64,10 @@ struct LibraryView: View {
                             title: item.title,
                             posterPath: item.posterPath,
                             mediaType: item.mediaType,
-                            year: item.releaseYear,
+                            // Run span for a series ("2016–2022"), release year for a
+                            // movie. The "Upcoming" badge already tracks the next
+                            // season, since isUpcoming now keys off the effective date.
+                            year: item.gridYearText,
                             badge: item.isUpcoming ? "Upcoming" : nil
                         )
                     }

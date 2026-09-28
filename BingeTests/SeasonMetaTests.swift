@@ -89,6 +89,18 @@ struct SeasonMetaTests {
         #expect(bare.detailMetaLine == "TV · Release date unknown")
     }
 
+    @Test("the grid caption is a run span for a series and a release year for a movie")
+    func gridCaption() {
+        // Concluded series → span.
+        #expect(tv(premiere: "2008-01-20", last: "2013-09-29", status: "Ended").gridYearText == "2008–2013")
+        // Returning series → premiere year (no misleading end year).
+        #expect(tv(premiere: "2022-02-18", last: "2025-03-21", status: "Returning").gridYearText == "2022")
+        // Movie → its release year.
+        let movie = MediaItem(tmdbId: 9, mediaType: .movie, title: "Film",
+                              releaseDate: ReleaseDate.parse("2024-02-27"))
+        #expect(movie.gridYearText == "2024")
+    }
+
     @Test("a movie keeps the type · date line and never mentions seasons")
     func movieUnchanged() {
         let movie = MediaItem(
