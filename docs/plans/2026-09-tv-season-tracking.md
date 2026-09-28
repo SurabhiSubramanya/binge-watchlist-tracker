@@ -7,10 +7,19 @@ the detail for this one multi-subtask feature, and each subtask is marked done h
 as it merges.
 
 > **✅ Complete (2026-09-27).** All five subtasks merged to `main` (head `112415f`).
-> 73 tests green (was 52). The one remaining check is on-device: build & install
-> **over the top** on the iPhone to confirm the existing library opens under the new
-> schema (lightweight migration by design — all new fields optional) and to see the
-> feature against live TMDB data.
+> 73 tests green (was 52). **On-device migration verified** the same day: built for
+> the iPhone 13 Pro, backed up the app data container off the phone first (restore
+> point), installed **over the top**, and confirmed by pulling the store back that
+> the migration is lossless — **33 titles before and after**, all five new columns
+> (`ZNUMBEROFSEASONS`, `ZSERIESSTATUS`, `ZLASTAIRDATE`, `ZNEXTRELEASEDATE`,
+> `ZNEXTSEASONNUMBER`) added, Keychain token preserved. Existing titles fill their
+> season data lazily on detail-open (refresh path). **Feature done, verified end to
+> end.**
+>
+> *Device gotcha worth keeping: a wirelessly-paired phone can read `available` in
+> `devicectl list devices` yet still fail install/copy with "device must be paired" —
+> it only works once state is `connected`, which took a one-time cable + Trust to
+> re-establish.*
 
 ## Context
 
