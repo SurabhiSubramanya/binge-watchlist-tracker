@@ -6,6 +6,12 @@ that plan stays the running log of everything post-feature-complete — this doc
 the detail for this one multi-subtask feature, and each subtask is marked done here
 as it merges.
 
+> **✅ Complete (2026-09-27).** All five subtasks merged to `main` (head `112415f`).
+> 73 tests green (was 52). The one remaining check is on-device: build & install
+> **over the top** on the iPhone to confirm the existing library opens under the new
+> schema (lightweight migration by design — all new fields optional) and to see the
+> feature against live TMDB data.
+
 ## Context
 
 Binge tracks each title as **one whole unit** — no episodes, no seasons (the dedup
@@ -150,7 +156,9 @@ ended / returning-with-next / returning-without-next / not-premiered / movie.
   architectural judgment beyond what's written here.
 - **Depends on:** 2
 
-### 5. Reflect seasons in the Library grid
+### 5. Reflect seasons in the Library grid ✅
+*Done 2026-09-27 · commit `112415f` · branch `feature/season-5-grid-caption` · merged to `main`. `MediaItem.gridYearText` (run span for a series, release year for a movie) drives the grid caption; the Upcoming badge needed no change (isUpcoming already tracks the next season). Seeded returning + ended sample TV items. 73 tests green (was 72). Verified live via a seed scaffold (reverted): "2008–2013" for the ended show, "2022" + Upcoming for the returning one, alignment intact.*
+
 `Views/LibraryView.swift`: the "Upcoming" badge is already `item.isUpcoming ? …`
 (`:68`), so subtask 2 **lights it up for new-season-coming automatically** — verify, no
 change. For the caption, pass a TV run-span (a compact `MediaItem.gridYearText`, e.g.

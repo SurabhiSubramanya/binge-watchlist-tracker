@@ -619,12 +619,13 @@ the logo in this image for the app logo."
 Roughly in the order they're worth doing. New bugs and enhancements get appended as
 they're reported, then promoted to **Done** with their branch and commit once merged.
 
-- **TV season tracking (Option A) — in progress.** Multi-subtask feature with its own
-  plan: [`2026-09-tv-season-tracking.md`](2026-09-tv-season-tracking.md). Reads the
-  season data TMDB already returns (`number_of_seasons`, `status`, `last_air_date`,
+- **TV season tracking (Option A) — ✅ done 2026-09-27.** Multi-subtask feature with
+  its own plan: [`2026-09-tv-season-tracking.md`](2026-09-tv-season-tracking.md). Reads
+  the season data TMDB already returns (`number_of_seasons`, `status`, `last_air_date`,
   `next_episode_to_air`) so the detail meta line shows run span / seasons / status /
   next season, and the Upcoming tag + reminder follow the next season instead of the
-  premiere. Started 2026-09-27; track progress in that doc.
+  premiere. Five subtasks merged (`112415f`), 73 tests green. Remaining: confirm the
+  on-device migration by installing over the top on the phone (see that plan).
 - **TestFlight — install/renew straight from the phone, no Mac.** *Optional follow-up to
   [Ops 9](#ops-9--paid-apple-developer-program-device-builds-now-last-1-year-); the paid
   membership it needs is now in place.* Needs an App Store Connect app record + an archive
